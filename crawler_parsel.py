@@ -129,7 +129,7 @@ if __name__ == '__main__':
 	base_url = 'https://www.bufale.net/the-black-list-la-lista-nera-del-web/'
 	#base_links = extract_links(base_url)
 	#domains1, links1 = multiprocess_extract(base_links, 1)
-	domains, links = multiworker_extract(base_url, 2, 400)
+	domains, links = multiworker_extract(base_url, 3, 2000)
 	pickle.dump(domains, open('domains_dump.pickle', 'wb'))
 	pickle.dump(links, open('links_dump.pickle', 'wb'))
 
