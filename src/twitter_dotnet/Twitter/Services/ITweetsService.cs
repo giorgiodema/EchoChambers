@@ -23,7 +23,7 @@ namespace Twitter.Services
         Task<IList<Tweet>> _GetTweetsAsync(
             [AliasAs("id")] string ids,
             [AliasAs("include_entities")] bool includeEntities = true,
-            [AliasAs("trim_user")] bool trimUsers = true,
+            [AliasAs("trim_user")] bool trimUsers = false,
             bool map = false);
     }
 }
