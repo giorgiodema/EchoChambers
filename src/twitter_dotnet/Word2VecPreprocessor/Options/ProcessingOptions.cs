@@ -37,18 +37,14 @@ namespace Word2VecPreprocessor.Options
         {
             // Source folder path
             if (string.IsNullOrEmpty(SourceFolder)) throw new ArgumentException("The source folder path can't be empty");
-            char[] invalid = Path.GetInvalidPathChars();
-            if (SourceFolder.Any(c => invalid.Contains(c))) throw new ArgumentException("The source folder path isn't valid");
             if (!Directory.Exists(SourceFolder)) throw new ArgumentException("The source folder doesn't exist");
 
             // Communities file
             if (string.IsNullOrEmpty(CommunitiesFile)) throw new ArgumentException("The communities file path can't be empty");
-            if (CommunitiesFile.Any(c => invalid.Contains(c))) throw new ArgumentException("The communities file path isn't valid");
             if (!File.Exists(CommunitiesFile)) throw new ArgumentException("The communities file doesn't exist");
 
             // Destination directory
             if (string.IsNullOrEmpty(DestinationFolder)) throw new ArgumentException("The destination folder path can't be empty");
-            if (DestinationFolder.Any(c => invalid.Contains(c))) throw new ArgumentException("The destination folder path isn't valid");
             if (!Directory.Exists(DestinationFolder)) throw new ArgumentException("The destination directory doesn't exist");
         }
     }

@@ -37,14 +37,10 @@ namespace TwitterHydrator.Options
         {
             // Source file path
             if (string.IsNullOrEmpty(SourceFile)) throw new ArgumentException("The source file path can't be empty");
-            char[] invalid = Path.GetInvalidFileNameChars();
-            if (SourceFile.Any(c => invalid.Contains(c))) throw new ArgumentException("The source file path isn't valid");
             if (!File.Exists(SourceFile)) throw new ArgumentException("The source file doesn't exist");
 
             // Destination directory
             if (string.IsNullOrEmpty(DestinationFolder)) throw new ArgumentException("The destination folder path can't be empty");
-            invalid = Path.GetInvalidPathChars();
-            if (DestinationFolder.Any(c => invalid.Contains(c))) throw new ArgumentException("The destination folder path isn't valid");
             if (!Directory.Exists(DestinationFolder)) throw new ArgumentException("The destination directory doesn't exist");
 
             // Limit
