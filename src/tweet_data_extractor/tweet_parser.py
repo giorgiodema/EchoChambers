@@ -44,17 +44,17 @@ def get_user_data():
 
                     # retrieve urls
                     for url in urls:
-                    	url = url["expanded_url"]
-                    	# if the url is internal in twitter return it all
-                    	if "twitter" in url[:20]:
+                        url = url["expanded_url"]
+                        # if the url is internal in twitter return it all
+                        if "twitter" in url[:20]:
                         	users_data[user][0].append(url)
                         # else if the url is not internal in twitter then take only its domain
                         else:
-                        	domain = _extract_domain(url)
-                        	if domain is None:
-                        		continue
-                        	else:
-                        		users_data[user][0].append(domain)
+                            domain = _extract_domain(url)
+                            if domain is None:
+                                continue
+                            else:
+                                users_data[user][0].append(domain)
                         		
 
                     # retrieve retweets
