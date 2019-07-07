@@ -66,7 +66,7 @@ def extract_communities(G):
     return res
 
 def draw_graph(G):
-    nx.draw_circular(G,node_color="#ffe001")
+    nx.draw_circular(G,node_size=10,arrowsize=1,width=0.1)
     plt.show()
 
 def draw_communities(G,comm):
