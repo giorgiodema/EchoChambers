@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -18,13 +19,16 @@ namespace Word2VecPreprocessor.Core
         /// Processes the incoming twitter data
         /// </summary>
         /// <param name="source">The path to the folder that contains the JSON files with all the available tweets</param>
-        /// <param name="communities">The path of the file with the extracted communities (list of user ids)</param>
+        /// <param name="communitiesPath">The path of the file with the extracted communities (list of user ids)</param>
         /// <param name="destination">The path of the destination folder to save the results</param>
-        public static void Process([NotNull] string source, [NotNull] string communities, [NotNull] string destination)
+        public static void Process([NotNull] string source, [NotNull] string communitiesPath, [NotNull] string destination)
         {
             // Load the available tweets
             var tweets = new Dictionary<ulong, List<string>>();
             LoadTweets(source, tweets);
+
+            // Load the available communities
+            var communities = LoadCommunities(communitiesPath);
         }
 
         /// <summary>
@@ -56,6 +60,19 @@ namespace Word2VecPreprocessor.Core
             // Recurse
             foreach (var folder in Directory.EnumerateDirectories(path))
                 LoadTweets(Path.Join(path, folder), result);
+        }
+
+        /// <summary>
+        /// Loads the list of user ids for the available communities
+        /// </summary>
+        /// <param name="path">The path of the CSV file with the list of user ids</param>
+        [NotNull, ItemNotNull]
+        [Pure]
+        private static IEnumerable<IReadOnlyList<ulong>> LoadCommunities([NotNull] string path)
+        {
+            using (var reader = File.OpenText(path))
+                while (reader.ReadLine() is string line)
+                    yield return line.Split(',').Select(ulong.Parse).ToArray();
         }
     }
 }
