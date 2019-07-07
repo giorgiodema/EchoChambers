@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Twitter.Models;
@@ -27,7 +28,7 @@ namespace Word2VecPreprocessor.Core
             // Load the available communities and build the dictionaries
             var guid = Guid.NewGuid().ToString("N");
             var communities = new[] { tweets.Keys.ToArray() }.Concat(LoadCommunities(options.CommunitiesFile));
-            foreach (var (community, i) in communities.Select((c, i) => (c, i)))
+            Parallel.ForEach(communities, (community, _, i) =>
             {
                 // Get all the unique tokens for the current community
                 var tokens = community.Aggregate(new HashSet<string>(), (s, id) =>
@@ -41,7 +42,7 @@ namespace Word2VecPreprocessor.Core
                 using (var output = File.CreateText(target))
                     foreach (var token in tokens)
                         output.WriteLine(token);
-            }
+            });
         }
 
         /// <summary>
