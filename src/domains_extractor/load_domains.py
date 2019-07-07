@@ -1,7 +1,7 @@
 import os
 import re
 
-PATH = os.path.join("fake-news-dataset","fake.csv")
+PATH = os.path.join("fake_news_dataset","fake.csv")
 
 # Return a set of domains extracted from kaggle dataset
 def load():
