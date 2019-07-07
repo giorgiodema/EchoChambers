@@ -8,7 +8,7 @@ import os
 
 def get_user_data():
     JSON_PATH = "tweets_json"  #json directory path
-    CACHE_FILE = "user_data.pickle"
+    CACHE_FILE = "user_data_cached.pickle"
 
     if os.path.isfile(CACHE_FILE):
         print(" [*] Pickled data found, loading...")
@@ -45,5 +45,5 @@ def get_user_data():
     return result
 
 
-
-get_user_data()
+if __name__ == "__main__"
+	get_user_data()
