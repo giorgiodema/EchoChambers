@@ -1,5 +1,8 @@
 import communities
 import random
+from datetime import datetime
+
+random.seed(datetime.now())
 
 def create_fake_data(nusers,nlinks):
     users = {}
@@ -10,14 +13,17 @@ def create_fake_data(nusers,nlinks):
         users[i]["domains"] = []
         users[i]["retweets"] = []
         for k in range(nlinks):
-            r = random.randint(0,len(domains)-1)
-            r2 = random.randint(0,nusers)
-            if domains[r] not in users[i]["domains"]:
-                users[i]["domains"].append(domains[r])
-            if r2 not in users[i]["retweets"] and r2 != i:
-                users[i]["retweets"].append(r2)
+            if random.randint(0,10)%2==0:
+                r = random.randint(0,len(domains)-1)
+                r2 = random.randint(0,nusers)
+                if domains[r] not in users[i]["domains"]:
+                    users[i]["domains"].append(domains[r])
+                if r2 not in users[i]["retweets"] and r2 != i:
+                    users[i]["retweets"].append(r2)
     return users
 
-users = create_fake_data(10,5)
-communities = community.detect_communities(users)
+users = create_fake_data(20,3)
+G = communities.create_network(users)
+comm = communities.extract_communities(G)
+communities.draw_communities(G,comm)
 print("ciao")
