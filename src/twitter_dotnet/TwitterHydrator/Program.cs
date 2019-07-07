@@ -34,7 +34,7 @@ namespace TwitterHydrator
                     options.Validate();
                     var apiKeys = OAuth2ClientInfo.LoadFromFile(ApiKeysPath);
                     var service = TwitterServiceFactory.GetTweetsService(apiKeys.ApplicationName, apiKeys.AccessToken);
-                    await HydratorEngine.ProcessAsync(options, service, (i, id) => ConsoleHelper.Write(MessageType.Info, $"[i]: {id}"));
+                    await HydratorEngine.ProcessAsync(options, service, (i, id) => ConsoleHelper.Write(MessageType.Info, $"[{i}]: {id}"));
                     Tcs.SetResult(null);
                 })
                 .WithNotParsed(errors =>
