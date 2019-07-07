@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -23,6 +24,25 @@ namespace Word2VecPreprocessor.Core
             // Load the available tweets
             var tweets = new Dictionary<ulong, HashSet<string>>();
             LoadTweets(source, tweets);
+
+            // Load the available communities and build the dictionaries
+            var guid = Guid.NewGuid().ToString("N");
+            var communities = new[] { tweets.Keys.ToArray() }.Concat(LoadCommunities(communitiesPath));
+            foreach (var (community, i) in communities.Select((c, i) => (c, i)))
+            {
+                // Get all the unique tokens for the current community
+                var tokens = community.Aggregate(new HashSet<string>(), (s, id) =>
+                {
+                    s.UnionWith(tweets[id]);
+                    return s;
+                });
+
+                // Save the dictionary to disk
+                var target = Path.Join(destination, $"{guid}_{i}.ls");
+                using (var output = File.CreateText(target))
+                    foreach (var token in tokens)
+                        output.WriteLine(token);
+            }
         }
 
         /// <summary>
