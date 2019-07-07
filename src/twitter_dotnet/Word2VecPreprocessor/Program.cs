@@ -10,9 +10,13 @@ namespace Word2VecPreprocessor
     {
         public static void Main(string[] args)
         {
-            new Parser()
+            new Parser(with => with.AutoHelp = true)
                 .ParseArguments<ProcessingOptions>(args)
-                .WithParsed(ProcessingEngine.Process)
+                .WithParsed(options =>
+                {
+                    options.Validate();
+                    ProcessingEngine.Process(options);
+                })
                 .WithNotParsed(errors =>
                 {
                     foreach (var error in errors)

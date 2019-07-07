@@ -27,10 +27,11 @@ namespace TwitterHydrator
         public static async Task Main(string[] args)
         {
             // Parse the arguments and execute the requested operations
-            new Parser()
+            new Parser(with => with.AutoHelp = true)
                 .ParseArguments<HydratorOptions>(args)
                 .WithParsed(async options =>
                 {
+                    options.Validate();
                     var apiKeys = OAuth2ClientInfo.LoadFromFile(ApiKeysPath);
                     var service = TwitterServiceFactory.GetTweetsService(apiKeys.ApplicationName, apiKeys.AccessToken);
                     await HydratorEngine.ProcessAsync(options, service, (i, id) => ConsoleHelper.Write(MessageType.Info, $"[i]: {id}"));
