@@ -9,7 +9,7 @@ namespace TwitterHydrator.Options
     /// <summary>
     /// A model that holds the user options when invoking the program
     /// </summary>
-    internal sealed class HydratorOptions
+    public sealed class HydratorOptions
     {
         /// <summary>
         /// Gets or sets the source file to use to read the tweet ids

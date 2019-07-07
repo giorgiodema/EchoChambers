@@ -9,7 +9,7 @@ namespace Word2VecPreprocessor.Options
     /// <summary>
     /// A model that holds the user options when invoking the program
     /// </summary>
-    internal sealed class ProcessingOptions
+    public sealed class ProcessingOptions
     {
         /// <summary>
         /// Gets or sets the source folder to use to read the tweets

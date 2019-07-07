@@ -1,4 +1,7 @@
 ﻿using System;
+using CommandLine;
+using Word2VecPreprocessor.Core;
+using Word2VecPreprocessor.Options;
 
 namespace Word2VecPreprocessor
 {
@@ -6,7 +9,16 @@ namespace Word2VecPreprocessor
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            new Parser()
+                .ParseArguments<ProcessingOptions>(args)
+                .WithParsed(ProcessingEngine.Process)
+                .WithNotParsed(errors =>
+                {
+                    foreach (var error in errors)
+                        Console.WriteLine(error.ToString());
+                });
+
+            Console.ReadKey();
         }
     }
 }

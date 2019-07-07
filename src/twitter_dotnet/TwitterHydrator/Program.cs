@@ -32,9 +32,7 @@ namespace TwitterHydrator
                 {
                     var apiKeys = OAuth2ClientInfo.LoadFromFile(ApiKeysPath);
                     var service = TwitterServiceFactory.GetTweetsService(apiKeys.ApplicationName, apiKeys.AccessToken);
-                    await HydratorEngine.ProcessAsync(
-                        options.SourceFile, options.DestinationFolder, options.Limit, service,
-                        (i, id) => ConsoleHelper.Write(MessageType.Info, id));
+                    await HydratorEngine.ProcessAsync(options, service, (i, id) => ConsoleHelper.Write(MessageType.Info, $"[i]: {id}"));
                     Tcs.SetResult(null);
                 })
                 .WithNotParsed(errors =>

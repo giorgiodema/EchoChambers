@@ -5,6 +5,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Twitter.Models;
+using Word2VecPreprocessor.Options;
 
 namespace Word2VecPreprocessor.Core
 {
@@ -16,18 +17,16 @@ namespace Word2VecPreprocessor.Core
         /// <summary>
         /// Processes the incoming twitter data
         /// </summary>
-        /// <param name="source">The path to the folder that contains the JSON files with all the available tweets</param>
-        /// <param name="communitiesPath">The path of the file with the extracted communities (list of user ids)</param>
-        /// <param name="destination">The path of the destination folder to save the results</param>
-        public static void Process([NotNull] string source, [NotNull] string communitiesPath, [NotNull] string destination)
+        /// <param name="options">The options to use to execute the operations</param>
+        public static void Process([NotNull] ProcessingOptions options)
         {
             // Load the available tweets
             var tweets = new Dictionary<ulong, HashSet<string>>();
-            LoadTweets(source, tweets);
+            LoadTweets(options.SourceFolder, tweets);
 
             // Load the available communities and build the dictionaries
             var guid = Guid.NewGuid().ToString("N");
-            var communities = new[] { tweets.Keys.ToArray() }.Concat(LoadCommunities(communitiesPath));
+            var communities = new[] { tweets.Keys.ToArray() }.Concat(LoadCommunities(options.CommunitiesFile));
             foreach (var (community, i) in communities.Select((c, i) => (c, i)))
             {
                 // Get all the unique tokens for the current community
@@ -38,7 +37,7 @@ namespace Word2VecPreprocessor.Core
                 });
 
                 // Save the dictionary to disk
-                var target = Path.Join(destination, $"{guid}_{i}.ls");
+                var target = Path.Join(options.DestinationFolder, $"{guid}_{i}.ls");
                 using (var output = File.CreateText(target))
                     foreach (var token in tokens)
                         output.WriteLine(token);

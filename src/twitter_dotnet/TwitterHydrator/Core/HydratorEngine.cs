@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Twitter.Services;
+using TwitterHydrator.Options;
 
 namespace TwitterHydrator.Core
 {
@@ -15,25 +16,23 @@ namespace TwitterHydrator.Core
         /// <summary>
         /// Processes tweets from a source file and serializes their expanded content to disk
         /// </summary>
-        /// <param name="source">The path of the source file, which contains a list of tweet ids</param>
-        /// <param name="destination">The destination folder to save the resulting tweets</param>
-        /// <param name="limit">The limit of tweets to retrieve</param>
+        /// <param name="options">The options to use to execute the operations</param>
         /// <param name="service">The <see cref="ITweetsService"/> instance service to use to retrieve tweets</param>
         /// <param name="callback">An optional callback to notify the user of the progress</param>
         public static async Task ProcessAsync(
-            [NotNull] string source, [NotNull] string destination, int limit,
+            [NotNull] HydratorOptions options,
             [NotNull] ITweetsService service,
             [CanBeNull] Action<int, string> callback = null)
         {
             // Create the actual destination folder
-            var folder = Path.Join(destination, Path.GetFileName(source));
+            var folder = Path.Join(options.DestinationFolder, Path.GetFileName(options.SourceFile));
             if (Directory.Exists(folder)) throw new InvalidOperationException($"The target directory \"{folder}\" already exists");
             Directory.CreateDirectory(folder);
 
             // Open the source file and process it
             int total = 0;
             var timestamp = DateTime.MinValue;
-            using (var input = File.OpenText(source))
+            using (var input = File.OpenText(options.SourceFile))
             {
                 do
                 {
@@ -55,7 +54,7 @@ namespace TwitterHydrator.Core
                     using (var output = File.CreateText(target))
                         output.Write(json);
                     
-                } while (limit == 0 || total < limit);
+                } while (options.Limit == 0 || total < options.Limit);
             }
         }
     }
