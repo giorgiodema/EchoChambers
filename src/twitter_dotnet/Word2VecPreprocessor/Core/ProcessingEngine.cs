@@ -23,7 +23,8 @@ namespace Word2VecPreprocessor.Core
         {
             // Load the available tweets
             var tweets = new Dictionary<ulong, HashSet<string>>();
-            LoadTweets(options.SourceFolder, tweets);
+            var frequencies = new TokensCounter();
+            LoadTweets(options.SourceFolder, tweets, frequencies);
 
             // Load the available communities and build the dictionaries
             var guid = Guid.NewGuid().ToString("N");
@@ -50,9 +51,23 @@ namespace Word2VecPreprocessor.Core
         /// </summary>
         /// <param name="path">The starting path</param>
         /// <param name="result">The resulting list of tweets</param>
+        /// <param name="frequencies">A mapping of the frequency of each token</param>
         [CollectionAccess(CollectionAccessType.UpdatedContent)]
-        private static void LoadTweets([NotNull] string path, [NotNull] Dictionary<ulong, HashSet<string>> result)
+        private static void LoadTweets(
+            [NotNull] string path,
+            [NotNull] Dictionary<ulong,HashSet<string>> result,
+            [NotNull] TokensCounter frequencies)
         {
+            // Local function to process a single tweet
+            void ProcessTweet(Tweet tweet)
+            {
+                var tokens = TweetTokenizer.Parse(tweet.Text).ToArray();
+                foreach (var token in tokens) frequencies.Increment(token);
+                if (result.TryGetValue(tweet.User.Id, out var set))
+                    foreach (var token in tokens) set.Add(token);
+                else result.Add(tweet.User.Id, new HashSet<string>(tokens));
+            }
+
             // Load the tweets in the current directory
             foreach (var file in Directory.EnumerateFiles(path))
             {
@@ -61,21 +76,14 @@ namespace Word2VecPreprocessor.Core
                 foreach (var tweet in tweets)
                 {
                     // Add the body of the tweet and the retweet too, if present
-                    if (result.TryGetValue(tweet.User.Id, out var set))
-                        foreach (var token in TweetTokenizer.Parse(tweet.Text)) set.Add(token);
-                    else result.Add(tweet.User.Id, new HashSet<string>(TweetTokenizer.Parse(tweet.Text)));
-                    if (tweet.Retweet is Tweet retweet)
-                    {
-                        if (result.TryGetValue(retweet.User.Id, out set))
-                            foreach (var token in TweetTokenizer.Parse(retweet.Text)) set.Add(token);
-                        else result.Add(retweet.User.Id, new HashSet<string>(TweetTokenizer.Parse(retweet.Text)));
-                    }
+                    ProcessTweet(tweet);
+                    if (tweet.Retweet is Tweet retweet) ProcessTweet(retweet);
                 }
             }
 
             // Recurse
             foreach (var folder in Directory.EnumerateDirectories(path))
-                LoadTweets(folder, result);
+                LoadTweets(folder, result, frequencies);
         }
 
         /// <summary>
