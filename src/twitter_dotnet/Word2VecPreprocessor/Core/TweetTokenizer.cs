@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
-namespace TwitterHydrator.Core
+namespace Word2VecPreprocessor.Core
 {
     /// <summary>
     /// A <see langword="class"/> that extracts tokens from tweet bodies
