@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
 using JetBrains.Annotations;
@@ -44,6 +45,7 @@ namespace TwitterHydrator
 
             // Wait for the completion of the pending operations
             await Tcs.Task;
+            Console.Beep(); Thread.Sleep(150); Console.Beep(); // Two high-pitched beeps to indicate success
             Console.ReadKey();
         }
     }
