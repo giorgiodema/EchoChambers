@@ -43,7 +43,7 @@ namespace Word2VecPreprocessor.Core
             var filtered = UrlRegex.Replace(text, string.Empty);
             return
                 from match in TokensRegex.Matches(filtered)
-                let token = match.Value
+                let token = match.Value.ToLowerInvariant()
                 where token.Length >= 4 && !SkippedWords.Contains(token)
                 select token;
         }

@@ -60,14 +60,14 @@ namespace Word2VecPreprocessor.Core
                 foreach (var tweet in tweets)
                 {
                     // Add the body of the tweet and the retweet too, if present
-                    if (result.TryGetValue(tweet.Id, out var set))
+                    if (result.TryGetValue(tweet.User.Id, out var set))
                         foreach (var token in TweetTokenizer.Parse(tweet.Text)) set.Add(token);
-                    else result.Add(tweet.Id, new HashSet<string>(TweetTokenizer.Parse(tweet.Text)));
+                    else result.Add(tweet.User.Id, new HashSet<string>(TweetTokenizer.Parse(tweet.Text)));
                     if (tweet.Retweet is Tweet retweet)
                     {
-                        if (result.TryGetValue(retweet.Id, out set))
+                        if (result.TryGetValue(retweet.User.Id, out set))
                             foreach (var token in TweetTokenizer.Parse(retweet.Text)) set.Add(token);
-                        else result.Add(retweet.Id, new HashSet<string>(TweetTokenizer.Parse(retweet.Text)));
+                        else result.Add(retweet.User.Id, new HashSet<string>(TweetTokenizer.Parse(retweet.Text)));
                     }
                 }
             }
