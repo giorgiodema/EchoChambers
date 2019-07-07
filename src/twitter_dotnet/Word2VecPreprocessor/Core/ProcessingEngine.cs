@@ -55,7 +55,7 @@ namespace Word2VecPreprocessor.Core
             // Load the tweets in the current directory
             foreach (var file in Directory.EnumerateFiles(path))
             {
-                var json = File.ReadAllText(Path.Join(path, file));
+                var json = File.ReadAllText(file);
                 var tweets = JsonConvert.DeserializeObject<IList<Tweet>>(json);
                 foreach (var tweet in tweets)
                 {
@@ -74,7 +74,7 @@ namespace Word2VecPreprocessor.Core
 
             // Recurse
             foreach (var folder in Directory.EnumerateDirectories(path))
-                LoadTweets(Path.Join(path, folder), result);
+                LoadTweets(folder, result);
         }
 
         /// <summary>
