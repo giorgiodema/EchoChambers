@@ -24,7 +24,7 @@ namespace Word2VecPreprocessor.Core
         public void Increment([NotNull] string token)
         {
             if (Mapping.ContainsKey(token)) _Mapping[token]++;
-            else _Mapping[token] = 0;
+            else _Mapping[token] = 1;
         }
     }
 }
