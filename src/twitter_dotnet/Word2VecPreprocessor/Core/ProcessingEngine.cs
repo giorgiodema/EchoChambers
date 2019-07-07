@@ -87,7 +87,7 @@ namespace Word2VecPreprocessor.Core
         {
             using (var reader = File.OpenText(path))
                 while (reader.ReadLine() is string line)
-                    yield return line.Split(',').Select(ulong.Parse).ToArray();
+                    yield return line.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(ulong.Parse).ToArray();
         }
     }
 }
