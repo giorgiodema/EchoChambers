@@ -14,7 +14,7 @@ namespace Word2VecPreprocessor.Core
         /// The <see cref="Regex"/> to parse shortened URLs in tweets
         /// </summary>
         [NotNull]
-        private static readonly Regex UrlRegex = new Regex(@"https:\/\/t\.co\/\w+", RegexOptions.Compiled);
+        private static readonly Regex UrlRegex = new Regex(@"https:\/\/t\.co\/\w+|@\w+", RegexOptions.Compiled);
 
         /// <summary>
         /// The <see cref="Regex"/> to parse actual tokens
