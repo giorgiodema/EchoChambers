@@ -8,7 +8,7 @@ using Twitter.Services;
 namespace TwitterHydrator.Core
 {
     /// <summary>
-    /// A <see langword="class"/> containing code to hydrize a set of tweets
+    /// A <see langword="class"/> containing code to hydrate a set of tweets
     /// </summary>
     public static class HydratorEngine
     {
