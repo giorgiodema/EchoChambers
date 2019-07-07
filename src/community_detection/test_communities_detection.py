@@ -1,4 +1,4 @@
-import community
+import communities
 import random
 
 def create_fake_data(nusers,nlinks):
