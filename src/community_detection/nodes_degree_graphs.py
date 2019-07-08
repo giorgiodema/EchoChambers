@@ -6,12 +6,14 @@ import pickle
 from tqdm import tqdm
 from collections import defaultdict
 
-GRAPH_FILE = os.path.join("raw", "graph_big.pickle")
+GRAPH_FILE = os.path.join("raw", "graph.pickle")
+DEGREE_FILES = os.path.join("raw", "graph_ultra_big_degrees.pickle")
 
 with open(GRAPH_FILE, "rb") as f:
     G = pickle.load(f)
 
 degs = [len(G[n]) for n in G.nodes]
+#pickle.dump(sorted(degs), open(DEGREE_FILES, "wb"))
 
 d = defaultdict(int)
 for deg in degs:
@@ -34,7 +36,7 @@ plt.show()
 
 
 plt.plot(x,area)
-plt.ylim((0,650))
-plt.xlim((0,1000))
+plt.ylim((0,1500))
+plt.xlim((0,3000))
 plt.show()
 
