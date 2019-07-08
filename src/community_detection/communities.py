@@ -6,6 +6,37 @@ from networkx.algorithms import community
 from datetime import datetime
 from tqdm import tqdm
 import sys
+import numpy as np
+import math
+
+def binary_search(l,item):
+    first = 0
+    last = len(l)-1
+    while first<last:
+        m = int(first + (last-first)/2)
+        if l[m] == item:
+            return m
+        if l[m] < item:
+            first = m + 1
+        else:
+            last = m - 1
+    return -1
+
+def intersect(l,m):
+    if len(l)==0 or len(m)==0:
+        return False
+    if l[0] > m[len(m)-1] or m[0] > l[len(l)-1]:
+        return False
+    i = 0
+    j = 0
+    while i<len(l) and j<len(m):
+        if l[i] == m[j]:
+            return True
+        if l[i] < m[j]:
+            i+=1
+        else:
+            j+=1
+    return False
 
 
 def create_network(users):
@@ -23,14 +54,22 @@ def create_network(users):
     #sys.stdout.flush()
     edges_list = Counter()
     processed = []
+    
+
+    for u in users:
+        users[u]["domains"].sort()
+        users[u]["retweets"].sort()
+
     ids = list(users.keys())
     for i in tqdm(range(len(ids))):
         for k in range(i+1,len(ids)):
-            for di in users[ids[i]]["domains"]:
-                if di in users[ids[k]]["domains"]:
-                    edges_list[(ids[i],ids[k])] += 1
-        for id in users[ids[i]]["retweets"]:
-            edges_list[(ids[i],id)] += 1
+            ids_i = ids[i]
+            ids_k = ids[k]
+            domi =  users[ids_i]["domains"]
+            if intersect(domi,users[ids_k]["domains"]):
+                    edges_list[(ids_i,ids_k)] += 1
+        for id in users[ids_i]["retweets"]:
+            edges_list[(ids_i,id)] += 1
 
 
     # initialize Graph
