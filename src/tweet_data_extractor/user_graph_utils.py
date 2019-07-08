@@ -22,20 +22,24 @@ def merge_bipartite(G_bipartite, users, domains):
         linked_usrs = G_bipartite[domain]
         for user1, user2 in itertools.combinations(linked_usrs, 2):
             update_edge(G_final, user1, user2)
+    print(f"Merged graph has {len(G_final.nodes)} nodes and {len(G_final.edges)} links")
     return G_final
 
 
 def add_links_retweet(G_final, all_tweets_itr):
     """Add links by retweet: link users in the final graph if one retweeted the other"""
+    n_links_start = len(G_final.edges)
     print(" [*] Linking user by retweets")
     for tweet in all_tweets_itr:
         if "retweeted_status" in tweet:
             u, v = tweet["user"]["id"], tweet["retweeted_status"]["user"]["id"]
             update_edge(G_final, u, v)
+    print(f"Retweeted links added {len(G_final.edges) - n_links_start} links")
 
 
 def add_links_mentioning(G_final, map_usrname_usrid, all_tweets_itr):
     """Add links by mentioning"""
+    n_links_start = len(G_final.edges)
     print(" [*] Linking user by mentioning")
     for tweet in all_tweets_itr:
         user = tweet["user"]["id"]
@@ -44,10 +48,12 @@ def add_links_mentioning(G_final, map_usrname_usrid, all_tweets_itr):
             if mentioned_user in map_usrname_usrid:
                 mentioned_userid = map_usrname_usrid[mentioned_user]
                 update_edge(G_final, mentioned_userid, user)
+    print(f"Mentioning links added {len(G_final.edges) - n_links_start} links")
 
 
 def add_links_reply(G_final, map_twtid_usrid, all_tweets_itr):
     """Add links by reply"""
+    n_links_start = len(G_final.edges)
     print(" [*] Linking user by reply")
     for tweet in all_tweets_itr:
         user = tweet["user"]["id"]
@@ -58,6 +64,7 @@ def add_links_reply(G_final, map_twtid_usrid, all_tweets_itr):
             if reply[1:] in map_twtid_usrid:     #reply[1:] for heading /
                 replied_user = map_twtid_usrid[reply[1:]]
                 update_edge(G_final, replied_user, user)
+    print(f"Reply links added {len(G_final.edges) - n_links_start} links")
 
 
 def remove_dead_nodes(G_final):
