@@ -29,6 +29,12 @@ namespace Word2VecPreprocessor.Options
         public string DestinationFolder { get; set; }
 
         /// <summary>
+        /// Gets or sets the number of dictionary words to use
+        /// </summary>
+        [Option('w', "words", HelpText = "The number of dictionary words to save.", Required = true)]
+        public int Words { get; set; }
+
+        /// <summary>
         /// Executes a preliminary validation of the current instance
         /// </summary>
         [AssertionMethod]
@@ -45,6 +51,9 @@ namespace Word2VecPreprocessor.Options
             // Destination directory
             if (string.IsNullOrEmpty(DestinationFolder)) throw new ArgumentException("The destination folder path can't be empty");
             if (!Directory.Exists(DestinationFolder)) throw new ArgumentException("The destination directory doesn't exist");
+
+            // Other parameters
+            if (Words <= 0) throw new ArgumentException("The number of words must be a positive number");
         }
     }
 }
