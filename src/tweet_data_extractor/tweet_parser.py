@@ -24,11 +24,11 @@ def get_user_graph():
     CACHE_FILE = os.path.join("raw", "graph.pickle")
 
     if os.path.isfile(CACHE_FILE):
-        print(" [*] Pickled data found, loading...")
+        print(" [-] Pickled data found, loading...")
         with open(CACHE_FILE, "rb") as file_in:
             return pickle.load(file_in)
 
-    print(" [*] Creating user data from tweets...")
+    print(" [-] Creating user data from tweets...")
 
     G = nx.Graph()
     users, domains = set(), set()
@@ -44,7 +44,8 @@ def get_user_graph():
 
     all_tweets = tweets_iter()
 
-    # Create bipartite graph   < users - domains >                 
+    # Create bipartite graph   < users - domains >
+    print(" [*] Creating bipartite graph < users - domains >")                 
     for tweet in all_tweets:
         urls = tweet["entities"]["urls"]
         user = tweet["user"]["id"]
@@ -94,6 +95,7 @@ def get_user_graph():
     # Merge bipartite graph: for each pair of users that points the same domain add an edge between them
     G_result = nx.Graph()
     G_result.add_nodes_from(users)
+    print(" [*] Merging bipartite graph")
     for domain in tqdm(domains):
         linked_usrs = G[domain]
         for user1, user2 in itertools.combinations(linked_usrs, 2):
@@ -101,20 +103,22 @@ def get_user_graph():
 
 
 
-    # Additional pass: link users in the final graph if one retweeted the other
+    # Add links by retweet: link users in the final graph if one retweeted the other
     all_tweets = tweets_iter()
+    print(" [*] Linking user by retweets")
     for tweet in all_tweets:
         if "retweeted_status" in tweet:
             u, v = tweet["user"]["id"], tweet["retweeted_status"]["user"]["id"]
             update_edge(G_result, u, v)
 
     # Optimization: trash nodes with no edges
-    for node in list(G_result.nodes):
+    print(" [*] Removing dead end nodes")
+    for node in tqdm(list(G_result.nodes)):
         if len(G_result[node]) < 1:
             G_result.remove_node(node)
 
 
-    print(f" [*] Graph construction finished, nodes {len(G_result.nodes)}, edges {len(G_result.edges)}")
+    print(f" [-] Graph construction finished, users {len(G_result.nodes)}, links {len(G_result.edges)}")
     pickle.dump(G_result, open(CACHE_FILE, "wb"))
 
     return G_result
