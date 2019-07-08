@@ -77,10 +77,10 @@ def get_user_graph():
     for domain in tqdm(domains):
         linked_usrs = G[domain]
         for user1, user2 in itertools.combinations(linked_usrs, 2):
-            if not G.has_edge(user1, user2):
-                G.add_edge(user1, user2, weight=1)
+            if not G_result.has_edge(user1, user2):
+                G_result.add_edge(user1, user2, weight=1)
             else:
-                G[user1][user2]["weight"] += 1
+                G_result[user1][user2]["weight"] += 1
 
     pickle.dump(G_result, open(CACHE_FILE, "wb"))
 
