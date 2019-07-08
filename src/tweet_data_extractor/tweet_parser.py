@@ -48,11 +48,16 @@ def get_user_graph():
     for tweet in all_tweets:
         urls = tweet["entities"]["urls"]
         user = tweet["user"]["id"]
+        rtw_user = tweet["retweeted_status"]["user"]["id"] if "retweeted_status" in tweet else None
 
         # create user key in users
         if not user in users:
             users.add(user)
             G.add_node(user)
+
+        if not rtw_user is None and not rtw_user in users:
+            users.add(rtw_user)
+            G.add_node(rtw_user)
 
         # retrieve urls domains
         for url in urls:
@@ -96,7 +101,20 @@ def get_user_graph():
 
 
 
+    # Additional pass: link users in the final graph if one retweeted the other
+    all_tweets = tweets_iter()
+    for tweet in all_tweets:
+        if "retweeted_status" in tweet:
+            u, v = tweet["user"]["id"], tweet["retweeted_status"]["user"]["id"]
+            update_edge(G_result, u, v)
 
+    # Optimization: trash nodes with no edges
+    for node in list(G_result.nodes):
+        if len(G_result[node]) < 1:
+            G_result.remove_node(node)
+
+
+    print(f" [*] Graph construction finished, nodes {len(G_result.nodes)}, edges {len(G_result.edges)}")
     pickle.dump(G_result, open(CACHE_FILE, "wb"))
 
     return G_result
