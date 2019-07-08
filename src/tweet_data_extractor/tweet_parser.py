@@ -67,9 +67,9 @@ def get_user_graph():
                         
                         # if edge does not exist create it with weigth 1
                         if not G.has_edge(user, domain):
-                            G.add_edge(user, domain, weigth=1)
+                            G.add_edge(user, domain, weight=1)
                         else:
-                            G[user][domain]["weigth"] += 1
+                            G[user][domain]["weight"] += 1
 
     # Merge bipartite graph: for each pair of users that points the same domain add an edge between them
     G_result = nx.Graph()
