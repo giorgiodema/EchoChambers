@@ -20,8 +20,8 @@ def _extract_domain(link: str) -> str:
 
 def get_user_graph():
     BASE_PATH = os.path.join("src", "tweet_data_extractor")
-    JSON_PATH = os.path.join(BASE_PATH, "tweets_json")  #json directory path
-    CACHE_FILE = os.path.join(BASE_PATH, "user_data.pickle")
+    JSON_PATH = os.path.join("raw", "tweets_json")  #json directory path
+    CACHE_FILE = os.path.join("raw", "graph.pickle")
 
     if os.path.isfile(CACHE_FILE):
         print(" [*] Pickled data found, loading...")
@@ -77,7 +77,10 @@ def get_user_graph():
     for domain in tqdm(domains):
         linked_usrs = G[domain]
         for user1, user2 in itertools.combinations(linked_usrs, 2):
-            G_result.add_edge(user1, user2)
+            if not G.has_edge(user1, user2):
+                G.add_edge(user1, user2, weight=1)
+            else:
+                G[user1][user2]["weight"] += 1
 
     pickle.dump(G_result, open(CACHE_FILE, "wb"))
 
