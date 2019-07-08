@@ -49,7 +49,7 @@ namespace Word2VecPreprocessor.Core
             var guid = Guid.NewGuid().ToString("N");
             using (var output = File.CreateText(Path.Join(options.DestinationFolder, $"{guid}_words.ls")))
                 foreach (var token in words)
-                    output.WriteLine(token);
+                    output.WriteLine($"{(counter.Mapping.TryGetValue(token, out var count) ? count : -1)} {token}");
 
             // Save the dataset
             ConsoleHelper.Write(MessageType.Info, "Saving dataset...");
