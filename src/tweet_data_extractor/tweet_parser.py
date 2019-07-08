@@ -17,7 +17,7 @@ JSON_PATH = os.path.join("raw")  #json directory path
 CACHE_FILE = os.path.join("raw", "graph.pickle")
 
 
-def _extract_domain(link: str) -> str:
+def extract_domain(link: str) -> str:
 	"""Extract the domain of an url"""
 	link_split = link.split('/')
 	if link.startswith('http'):
@@ -75,7 +75,7 @@ def get_user_graph():
 
     print(" [-] Creating user data from tweets...")
 
-    G = nx.Graph()
+    G_bipartite = nx.Graph()
     users, domains = set(), set()
 
 
@@ -91,11 +91,11 @@ def get_user_graph():
         # create user key in users
         if not user in users:
             users.add(user)
-            G.add_node(user)
+            G_bipartite.add_node(user)
 
         if not rtw_user is None and not rtw_user in users:
             users.add(rtw_user)
-            G.add_node(rtw_user)
+            G_bipartite.add_node(rtw_user)
 
         # retrieve urls domains
         for url in urls:
@@ -106,20 +106,20 @@ def get_user_graph():
                 domain = url
             # else if the url is not internal in twitter then take only its domain
             else:
-                domain = _extract_domain(url)
+                domain = extract_domain(url)
                 if domain is None:
                     continue
 
             # if domain first appereance, create key in domains
             if not domain in domains:
                 domains.add(domain)
-                G.add_node(domain)
+                G_bipartite.add_node(domain)
             
             # if edge does not exist create it with weigth 1
-            if not G.has_edge(user, domain):
-                G.add_edge(user, domain, weight=1)
+            if not G_bipartite.has_edge(user, domain):
+                G_bipartite.add_edge(user, domain, weight=1)
             else:
-                G[user][domain]["weight"] += 1
+                G_bipartite[user][domain]["weight"] += 1
 
 
     def update_edge(G, u, v):
@@ -130,13 +130,13 @@ def get_user_graph():
             G[u][v]["weight"] += 1
 
     # Merge bipartite graph: for each pair of users that points the same domain add an edge between them
-    G_result = nx.Graph()
-    G_result.add_nodes_from(users)
+    G_final = nx.Graph()
+    G_final.add_nodes_from(users)
     print(" [*] Merging bipartite graph")
     for domain in tqdm(domains):
-        linked_usrs = G[domain]
+        linked_usrs = G_bipartite[domain]
         for user1, user2 in itertools.combinations(linked_usrs, 2):
-            update_edge(G_result, user1, user2)
+            update_edge(G_final, user1, user2)
 
 
 
@@ -146,7 +146,7 @@ def get_user_graph():
     for tweet in all_tweets:
         if "retweeted_status" in tweet:
             u, v = tweet["user"]["id"], tweet["retweeted_status"]["user"]["id"]
-            update_edge(G_result, u, v)
+            update_edge(G_final, u, v)
 
 
     # Add links by mentioning
@@ -159,7 +159,7 @@ def get_user_graph():
         for mentioned_user in mentions:
             if mentioned_user in map_usrname_usrid:
                 mentioned_userid = map_usrname_usrid[mentioned_user]
-                update_edge(G_result, mentioned_userid, user)
+                update_edge(G_final, mentioned_userid, user)
 
 
     # Add links by reply
@@ -173,20 +173,20 @@ def get_user_graph():
         for reply in replies:
             if reply[1:] in map_twtid_usrid:     #reply[1:] for heading /
                 replied_user = map_twtid_usrid[reply[1:]]
-                update_edge(G_result, replied_user, user)
+                update_edge(G_final, replied_user, user)
 
 
     # Optimization: trash nodes with no edges
     print(" [*] Removing dead end nodes")
-    for node in tqdm(list(G_result.nodes)):
-        if len(G_result[node]) < 1:
-            G_result.remove_node(node)
+    for node in tqdm(list(G_final.nodes)):
+        if len(G_final[node]) < 1:
+            G_final.remove_node(node)
 
 
-    print(f" [-] Graph construction finished, users {len(G_result.nodes)}, links {len(G_result.edges)}")
-    pickle.dump(G_result, open(CACHE_FILE, "wb"))
+    print(f" [-] Graph construction finished, users {len(G_final.nodes)}, links {len(G_final.edges)}")
+    pickle.dump(G_final, open(CACHE_FILE, "wb"))
 
-    return G_result
+    return G_final
 
 
 if __name__ == "__main__":
