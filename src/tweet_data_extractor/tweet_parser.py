@@ -78,16 +78,24 @@ def get_user_graph():
             else:
                 G[user][domain]["weight"] += 1
 
+
+    def update_edge(G, u, v):
+        """If <u,v> edge does not exists create it, otherwise increment its weight by 1"""
+        if not G.has_edge(u, v):
+            G.add_edge(u, v, weight=1)
+        else:
+            G[u][v]["weight"] += 1
+
     # Merge bipartite graph: for each pair of users that points the same domain add an edge between them
     G_result = nx.Graph()
     G_result.add_nodes_from(users)
     for domain in tqdm(domains):
         linked_usrs = G[domain]
         for user1, user2 in itertools.combinations(linked_usrs, 2):
-            if not G_result.has_edge(user1, user2):
-                G_result.add_edge(user1, user2, weight=1)
-            else:
-                G_result[user1][user2]["weight"] += 1
+            update_edge(G_result, user1, user2)
+
+
+
 
     pickle.dump(G_result, open(CACHE_FILE, "wb"))
 
