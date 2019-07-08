@@ -33,43 +33,50 @@ def get_user_graph():
     G = nx.Graph()
     users, domains = set(), set()
 
-    # Create bipartite graph   < users - domains > 
-    for filename in tqdm(os.listdir(JSON_PATH)):
-        if filename.endswith(".json"): 
-            with open(os.path.join(JSON_PATH, filename), "r", encoding="utf-8") as json_file:
-                tweets = json.load(json_file)
-                
-                for tweet in tweets:
-                    urls = tweet["entities"]["urls"]
-                    user = tweet["user"]["id"]
 
-                    # create user key in users
-                    if not user in users:
-                        users.add(user)
-                        G.add_node(user)
+    def tweets_iter():
+        for filename in tqdm(os.listdir(JSON_PATH)):
+            if filename.endswith(".json"): 
+                with open(os.path.join(JSON_PATH, filename), "r", encoding="utf-8") as json_file:
+                    tweets = json.load(json_file)
+                    for tweet in tweets:
+                        yield tweet
 
-                    # retrieve urls domains
-                    for url in urls:
-                        url = url["expanded_url"]
+    all_tweets = tweets_iter()
 
-                        # if the url is internal in twitter return it all
-                        if "twitter" in url[:20]:
-                        	domain = url
-                        # else if the url is not internal in twitter then take only its domain
-                        else:
-                            domain = _extract_domain(url)
-                            if domain is None:
-                                continue
+    # Create bipartite graph   < users - domains >                 
+    for tweet in all_tweets:
+        urls = tweet["entities"]["urls"]
+        user = tweet["user"]["id"]
 
-                        # if domain first appereance, create key in domains
-                        if not domain in domains:
-                            domains.add(domain)
-                        
-                        # if edge does not exist create it with weigth 1
-                        if not G.has_edge(user, domain):
-                            G.add_edge(user, domain, weight=1)
-                        else:
-                            G[user][domain]["weight"] += 1
+        # create user key in users
+        if not user in users:
+            users.add(user)
+            G.add_node(user)
+
+        # retrieve urls domains
+        for url in urls:
+            url = url["expanded_url"]
+
+            # if the url is internal in twitter return it all
+            if "twitter" in url[:20]:
+                domain = url
+            # else if the url is not internal in twitter then take only its domain
+            else:
+                domain = _extract_domain(url)
+                if domain is None:
+                    continue
+
+            # if domain first appereance, create key in domains
+            if not domain in domains:
+                domains.add(domain)
+                G.add_node(domain)
+            
+            # if edge does not exist create it with weigth 1
+            if not G.has_edge(user, domain):
+                G.add_edge(user, domain, weight=1)
+            else:
+                G[user][domain]["weight"] += 1
 
     # Merge bipartite graph: for each pair of users that points the same domain add an edge between them
     G_result = nx.Graph()
