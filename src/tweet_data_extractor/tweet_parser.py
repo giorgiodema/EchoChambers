@@ -9,6 +9,9 @@ from tqdm import tqdm
 from collections import defaultdict
 import os
 
+import tweet_parser_utils 
+import user_graph_utils
+
 FLUSH_ALWAYS = True
 
 BASE_PATH = os.path.join("src", "tweet_data_extractor")
@@ -16,55 +19,6 @@ BASE_PATH = os.path.join("src", "tweet_data_extractor")
 JSON_PATH = os.path.join("raw")  #json directory path
 CACHE_FILE = os.path.join("raw", "graph.pickle")
 
-
-def extract_domain(link: str) -> str:
-	"""Extract the domain of an url"""
-	link_split = link.split('/')
-	if link.startswith('http'):
-		domain = link_split[2] if len(link_split)>=3 else None
-	else:
-		domain = None
-	return domain
-
-def extract_mentions(tweet):
-    if "retweeted_status" in tweet:
-        text = tweet["text"].replace('@', '', 1)  #discard heading @ in retweeted text 'RT @...'
-    else:
-        text = tweet["text"]
-    exp = re.compile(r"@\w+")
-    return exp.findall(text)
-
-
-def extract_replies(tweet):
-    if "retweeted_status" in tweet:
-        return None
-    exp = re.compile(r"\/[0-9]{4,}")
-    urls = [url["expanded_url"] for url in tweet["entities"]["urls"]]
-    urls = ' '.join(urls)
-    return exp.findall(urls)
-    
-
-def tweets_iter(dir_path):
-    for filename in tqdm(sorted(os.listdir(dir_path))):
-        if filename.endswith(".json"): 
-            with open(os.path.join(dir_path, filename), "r", encoding="utf-8") as json_file:
-                tweets = json.load(json_file)
-                for tweet in tweets:
-                    yield tweet
-
-
-def get_mappings():
-    """Returns a tuple with two dictionaries. 
-    The first is a mapping username -> userid, where username is the one @foo, with @.
-    The second is a mapping tweetid -> userid of the creator"""
-    map_usrname_usrid = {}
-    map_twtid_usrid = {}
-    all_tweets = tweets_iter(JSON_PATH)
-    print(" [*] Extracting user mappings")  
-    for tweet in all_tweets:
-        map_usrname_usrid["@"+tweet["user"]["screen_name"]] = tweet["user"]["id"]
-        map_twtid_usrid[tweet["id"]] = tweet["user"]["id"]
-    return map_usrname_usrid, map_twtid_usrid
 
 
 def get_user_graph():
@@ -79,7 +33,7 @@ def get_user_graph():
     users, domains = set(), set()
 
 
-    all_tweets = tweets_iter(JSON_PATH)
+    all_tweets = tweet_parser_utils.tweets_iter(JSON_PATH)
 
     # Create bipartite graph   < users - domains >
     print(" [*] Creating bipartite graph < users - domains >")                 
@@ -106,7 +60,7 @@ def get_user_graph():
                 domain = url
             # else if the url is not internal in twitter then take only its domain
             else:
-                domain = extract_domain(url)
+                domain = tweet_parser_utils.extract_domain(url)
                 if domain is None:
                     continue
 
@@ -122,65 +76,27 @@ def get_user_graph():
                 G_bipartite[user][domain]["weight"] += 1
 
 
-    def update_edge(G, u, v):
-        """If <u,v> edge does not exists create it, otherwise increment its weight by 1"""
-        if not G.has_edge(u, v):
-            G.add_edge(u, v, weight=1)
-        else:
-            G[u][v]["weight"] += 1
+    # Merge bipartite graph in final graph
+    G_final = user_graph_utils.merge_bipartite(G_bipartite, users, domains)
 
-    # Merge bipartite graph: for each pair of users that points the same domain add an edge between them
-    G_final = nx.Graph()
-    G_final.add_nodes_from(users)
-    print(" [*] Merging bipartite graph")
-    for domain in tqdm(domains):
-        linked_usrs = G_bipartite[domain]
-        for user1, user2 in itertools.combinations(linked_usrs, 2):
-            update_edge(G_final, user1, user2)
+    # Add links by retweet
+    tweet_itr = tweet_parser_utils.tweets_iter(JSON_PATH)
+    user_graph_utils.add_links_retweet(G_final, tweet_itr)
 
-
-
-    # Add links by retweet: link users in the final graph if one retweeted the other
-    all_tweets = tweets_iter(JSON_PATH)
-    print(" [*] Linking user by retweets")
-    for tweet in all_tweets:
-        if "retweeted_status" in tweet:
-            u, v = tweet["user"]["id"], tweet["retweeted_status"]["user"]["id"]
-            update_edge(G_final, u, v)
-
+    # Get userid mappings (useful later)
+    tweet_itr = tweet_parser_utils.tweets_iter(JSON_PATH)
+    map_usrname_usrid, map_twtid_usrid = tweet_parser_utils.get_mappings(tweet_itr)
 
     # Add links by mentioning
-    map_usrname_usrid, map_twtid_usrid = get_mappings()
-    all_tweets = tweets_iter(JSON_PATH)
-    print(" [*] Linking user by mentioning")
-    for tweet in all_tweets:
-        user = tweet["user"]["id"]
-        mentions = extract_mentions(tweet)
-        for mentioned_user in mentions:
-            if mentioned_user in map_usrname_usrid:
-                mentioned_userid = map_usrname_usrid[mentioned_user]
-                update_edge(G_final, mentioned_userid, user)
-
+    tweet_itr = tweet_parser_utils.tweets_iter(JSON_PATH)
+    user_graph_utils.add_links_mentioning(G_final, map_usrname_usrid, tweet_itr)
 
     # Add links by reply
-    all_tweets = tweets_iter(JSON_PATH)
-    print(" [*] Linking user by reply")
-    for tweet in all_tweets:
-        user = tweet["user"]["id"]
-        replies = extract_replies(tweet)
-        if replies is None:
-            continue
-        for reply in replies:
-            if reply[1:] in map_twtid_usrid:     #reply[1:] for heading /
-                replied_user = map_twtid_usrid[reply[1:]]
-                update_edge(G_final, replied_user, user)
+    tweet_itr = tweet_parser_utils.tweets_iter(JSON_PATH)
+    user_graph_utils.add_links_reply(G_final, map_twtid_usrid, tweet_itr)
 
-
-    # Optimization: trash nodes with no edges
-    print(" [*] Removing dead end nodes")
-    for node in tqdm(list(G_final.nodes)):
-        if len(G_final[node]) < 1:
-            G_final.remove_node(node)
+    # Trash nodes with no edges
+    user_graph_utils.remove_dead_nodes(G_final)
 
 
     print(f" [-] Graph construction finished, users {len(G_final.nodes)}, links {len(G_final.edges)}")
