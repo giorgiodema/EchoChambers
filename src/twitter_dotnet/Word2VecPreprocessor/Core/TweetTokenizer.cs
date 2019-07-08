@@ -38,14 +38,14 @@ namespace Word2VecPreprocessor.Core
         /// <param name="text">The tweet body to process</param>
         [NotNull, ItemNotNull]
         [Pure]
-        public static IEnumerable<string> Parse([NotNull] string text)
+        public static IReadOnlyList<string> Parse([NotNull] string text)
         {
             var filtered = UrlRegex.Replace(text, string.Empty);
-            return
+            return (
                 from match in TokensRegex.Matches(filtered)
                 let token = match.Value.ToLowerInvariant()
                 where token.Length >= 4 && !SkippedWords.Contains(token)
-                select token;
+                select token).ToArray();
         }
     }
 }

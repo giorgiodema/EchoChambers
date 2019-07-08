@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Twitter.Models;
@@ -22,27 +21,34 @@ namespace Word2VecPreprocessor.Core
         /// <param name="options">The options to use to execute the operations</param>
         public static void Process([NotNull] ProcessingOptions options)
         {
-            // Load the available tweets
-            var lookup = EnumerateTweets(options.SourceFolder).Distinct().ToReadOnlyLookup(tweet => tweet.User.Id);
+            // Load the tweets as a collection of tokens
+            var data = EnumerateTweets(options.SourceFolder).Distinct().ToReadOnlyLookup(tweet => tweet.User.Id);
+            var texts = data.Keys.ToDictionary(key => key, key => data[key].Select(tweet => TweetTokenizer.Parse(tweet.Text)).ToArray());
 
-            // Load the available communities and build the dictionaries
+            // Count the occurrences of each word
+            var counter = new TokensCounter();
+            foreach (var tweets in texts.Values)
+                foreach (var tweet in tweets)
+                    foreach (var token in tweet)
+                        counter.Increment(token);
+
+            // Build the tokens dictionary and save it
+            var words = new[] { "<UNK>" }.Concat(counter.Mapping.OrderByDescending(pair => pair.Value).Take(options.Words).Select(pair => pair.Key)).ToArray();
+            var lookup = new Dictionary<string, int>();
+            foreach (var (word, i) in words.Select((w, i) => (w, i)))
+                lookup.Add(word, i);
+
+            // Save the dictionary to disk
             var guid = Guid.NewGuid().ToString("N");
-            var communities = new[] { tweets.Keys.ToArray() }.Concat(LoadCommunities(options.CommunitiesFile));
-            Parallel.ForEach(communities, (community, _, i) =>
-            {
-                // Get all the unique tokens for the current community
-                var tokens = community.Aggregate(new HashSet<string>(), (s, id) =>
-                {
-                    s.UnionWith(tweets[id]);
-                    return s;
-                });
+            using (var output = File.CreateText(Path.Join(options.DestinationFolder, $"{guid}_words.ls")))
+                foreach (var token in words)
+                    output.WriteLine(token);
 
-                // Save the dictionary to disk
-                var target = Path.Join(options.DestinationFolder, $"{guid}_{i}.ls");
-                using (var output = File.CreateText(target))
-                    foreach (var token in tokens)
-                        output.WriteLine(token);
-            });
+            // Save the dataset
+            using (var output = File.CreateText(Path.Join(options.DestinationFolder, $"{guid}_dataset.ls")))
+                foreach (var tweets in texts.Values)
+                    foreach (var tweet in tweets)
+                        output.WriteLine(string.Join(' ', tweet.Select(token => lookup.TryGetValue(token, out int i) ? i : 0)));
         }
 
         /// <summary>
@@ -69,19 +75,6 @@ namespace Word2VecPreprocessor.Core
             foreach (var folder in Directory.EnumerateDirectories(path))
                 foreach (var tweet in EnumerateTweets(folder))
                     yield return tweet;
-        }
-
-        /// <summary>
-        /// Loads the list of user ids for the available communities
-        /// </summary>
-        /// <param name="path">The path of the CSV file with the list of user ids</param>
-        [NotNull, ItemNotNull]
-        [Pure]
-        private static IEnumerable<IReadOnlyList<ulong>> LoadCommunities([NotNull] string path)
-        {
-            using (var reader = File.OpenText(path))
-                while (reader.ReadLine() is string line)
-                    yield return line.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(ulong.Parse).ToArray();
         }
     }
 }
