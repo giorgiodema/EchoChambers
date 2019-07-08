@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Helpers.UI;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Twitter.Models;
@@ -22,29 +23,36 @@ namespace Word2VecPreprocessor.Core
         public static void Process([NotNull] ProcessingOptions options)
         {
             // Load the tweets as a collection of tokens
+            ConsoleHelper.Write(MessageType.Info, "Reading tweets...");
             var data = EnumerateTweets(options.SourceFolder).Distinct().ToReadOnlyLookup(tweet => tweet.User.Id);
             var texts = data.Keys.ToDictionary(key => key, key => data[key].Select(tweet => TweetTokenizer.Parse(tweet.Text)).ToArray());
+            ConsoleHelper.Write(MessageType.Info, $"{data.Values.Aggregate(0, (s, l) => s + l.Count)} tweets loaded");
 
             // Count the occurrences of each word
+            ConsoleHelper.Write(MessageType.Info, "Counting tokens...");
             var counter = new TokensCounter();
             foreach (var tweets in texts.Values)
                 foreach (var tweet in tweets)
                     foreach (var token in tweet)
                         counter.Increment(token);
+            ConsoleHelper.Write(MessageType.Info, $"{counter.Mapping.Count} total tokens");
 
             // Build the tokens dictionary and save it
+            ConsoleHelper.Write(MessageType.Info, "Building sorted tokens mapping...");
             var words = new[] { "<UNK>" }.Concat(counter.Mapping.OrderByDescending(pair => pair.Value).Take(options.Words).Select(pair => pair.Key)).ToArray();
             var lookup = new Dictionary<string, int>();
             foreach (var (word, i) in words.Select((w, i) => (w, i)))
                 lookup.Add(word, i);
 
             // Save the dictionary to disk
+            ConsoleHelper.Write(MessageType.Info, "Saving tokens dictionary to disk...");
             var guid = Guid.NewGuid().ToString("N");
             using (var output = File.CreateText(Path.Join(options.DestinationFolder, $"{guid}_words.ls")))
                 foreach (var token in words)
                     output.WriteLine(token);
 
             // Save the dataset
+            ConsoleHelper.Write(MessageType.Info, "Saving dataset...");
             using (var output = File.CreateText(Path.Join(options.DestinationFolder, $"{guid}_dataset.ls")))
                 foreach (var tweets in texts.Values)
                     foreach (var tweet in tweets)
