@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using Newtonsoft.Json;
 using Twitter.Models.Base;
 
 namespace Twitter.Models
@@ -6,7 +8,7 @@ namespace Twitter.Models
     /// <summary>
     /// A model that represents a single tweet
     /// </summary>
-    public sealed class Tweet
+    public sealed class Tweet : IEquatable<Tweet>
     {
         /// <summary>
         /// Gets the id for the current tweet
@@ -43,5 +45,15 @@ namespace Twitter.Models
         /// </summary>
         [JsonProperty("created_at")]
         public string CreationTime { get; internal set; }
+
+        /// <inheritdoc/>
+        public bool Equals(Tweet other) => other?.Id == Id;
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj) => obj is Tweet tweet && tweet.Equals(this);
+
+        /// <inheritdoc/>
+        [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+        public override int GetHashCode() => Id.GetHashCode();
     }
 }
