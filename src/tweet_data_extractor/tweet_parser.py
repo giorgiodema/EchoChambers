@@ -1,3 +1,5 @@
+
+import re
 import json
 import pickle
 import networkx as nx
@@ -6,6 +8,13 @@ from pprint import pprint
 from tqdm import tqdm
 from collections import defaultdict
 import os
+
+FLUSH_ALWAYS = True
+
+BASE_PATH = os.path.join("src", "tweet_data_extractor")
+#JSON_PATH = os.path.join("raw", "tweets_json")  #json directory path
+JSON_PATH = os.path.join("raw")  #json directory path
+CACHE_FILE = os.path.join("raw", "graph.pickle")
 
 
 def _extract_domain(link: str) -> str:
@@ -17,13 +26,49 @@ def _extract_domain(link: str) -> str:
 		domain = None
 	return domain
 
+def extract_mentions(tweet):
+    if "retweeted_status" in tweet:
+        text = tweet["text"].replace('@', '', 1)  #discard heading @ in retweeted text 'RT @...'
+    else:
+        text = tweet["text"]
+    exp = re.compile(r"@\w+")
+    return exp.findall(text)
+
+
+def extract_replies(tweet):
+    if "retweeted_status" in tweet:
+        return None
+    exp = re.compile(r"\/[0-9]{4,}")
+    urls = [url["expanded_url"] for url in tweet["entities"]["urls"]]
+    urls = ' '.join(urls)
+    return exp.findall(urls)
+    
+
+def tweets_iter(dir_path):
+    for filename in tqdm(sorted(os.listdir(dir_path))):
+        if filename.endswith(".json"): 
+            with open(os.path.join(dir_path, filename), "r", encoding="utf-8") as json_file:
+                tweets = json.load(json_file)
+                for tweet in tweets:
+                    yield tweet
+
+
+def get_mappings():
+    """Returns a tuple with two dictionaries. 
+    The first is a mapping username -> userid, where username is the one @foo, with @.
+    The second is a mapping tweetid -> userid of the creator"""
+    map_usrname_usrid = {}
+    map_twtid_usrid = {}
+    all_tweets = tweets_iter(JSON_PATH)
+    print(" [*] Extracting user mappings")  
+    for tweet in all_tweets:
+        map_usrname_usrid["@"+tweet["user"]["screen_name"]] = tweet["user"]["id"]
+        map_twtid_usrid[tweet["id"]] = tweet["user"]["id"]
+    return map_usrname_usrid, map_twtid_usrid
+
 
 def get_user_graph():
-    BASE_PATH = os.path.join("src", "tweet_data_extractor")
-    JSON_PATH = os.path.join("raw", "tweets_json")  #json directory path
-    CACHE_FILE = os.path.join("raw", "graph.pickle")
-
-    if os.path.isfile(CACHE_FILE):
+    if os.path.isfile(CACHE_FILE) and not FLUSH_ALWAYS:
         print(" [-] Pickled data found, loading...")
         with open(CACHE_FILE, "rb") as file_in:
             return pickle.load(file_in)
@@ -34,15 +79,7 @@ def get_user_graph():
     users, domains = set(), set()
 
 
-    def tweets_iter():
-        for filename in tqdm(os.listdir(JSON_PATH)):
-            if filename.endswith(".json"): 
-                with open(os.path.join(JSON_PATH, filename), "r", encoding="utf-8") as json_file:
-                    tweets = json.load(json_file)
-                    for tweet in tweets:
-                        yield tweet
-
-    all_tweets = tweets_iter()
+    all_tweets = tweets_iter(JSON_PATH)
 
     # Create bipartite graph   < users - domains >
     print(" [*] Creating bipartite graph < users - domains >")                 
@@ -104,12 +141,40 @@ def get_user_graph():
 
 
     # Add links by retweet: link users in the final graph if one retweeted the other
-    all_tweets = tweets_iter()
+    all_tweets = tweets_iter(JSON_PATH)
     print(" [*] Linking user by retweets")
     for tweet in all_tweets:
         if "retweeted_status" in tweet:
             u, v = tweet["user"]["id"], tweet["retweeted_status"]["user"]["id"]
             update_edge(G_result, u, v)
+
+
+    # Add links by mentioning
+    map_usrname_usrid, map_twtid_usrid = get_mappings()
+    all_tweets = tweets_iter(JSON_PATH)
+    print(" [*] Linking user by mentioning")
+    for tweet in all_tweets:
+        user = tweet["user"]["id"]
+        mentions = extract_mentions(tweet)
+        for mentioned_user in mentions:
+            if mentioned_user in map_usrname_usrid:
+                mentioned_userid = map_usrname_usrid[mentioned_user]
+                update_edge(G_result, mentioned_userid, user)
+
+
+    # Add links by reply
+    all_tweets = tweets_iter(JSON_PATH)
+    print(" [*] Linking user by reply")
+    for tweet in all_tweets:
+        user = tweet["user"]["id"]
+        replies = extract_replies(tweet)
+        if replies is None:
+            continue
+        for reply in replies:
+            if reply[1:] in map_twtid_usrid:     #reply[1:] for heading /
+                replied_user = map_twtid_usrid[reply[1:]]
+                update_edge(G_result, replied_user, user)
+
 
     # Optimization: trash nodes with no edges
     print(" [*] Removing dead end nodes")
