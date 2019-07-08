@@ -13,17 +13,16 @@ def update_edge(G, u, v):
         G[u][v]["weight"] += 1
 
 
-def merge_bipartite(G_bipartite, users, domains):
+def merge_bipartite(G, users, domains):
     """Merge bipartite graph: for each pair of users that points the same domain add an edge between them"""
-    G_final = nx.Graph()
-    G_final.add_nodes_from(users)
     print(" [*] Merging bipartite graph")
     for domain in tqdm(domains):
-        linked_usrs = G_bipartite[domain]
+        linked_usrs = G[domain]
         for user1, user2 in itertools.combinations(linked_usrs, 2):
-            update_edge(G_final, user1, user2)
-    print(f"Merged graph has {len(G_final.nodes)} nodes and {len(G_final.edges)} links")
-    return G_final
+            update_edge(G, user1, user2)
+        G.remove_node(domain)
+    print(f"Merged graph has {len(G.nodes)} nodes and {len(G.edges)} links")
+    return G
 
 
 def add_links_retweet(G_final, all_tweets_itr):

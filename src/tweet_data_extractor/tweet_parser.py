@@ -16,7 +16,7 @@ FLUSH_ALWAYS = True
 
 BASE_PATH = os.path.join("src", "tweet_data_extractor")
 #JSON_PATH = os.path.join("raw", "tweets_json")  #json directory path
-JSON_PATH = os.path.join("raw")  #json directory path
+JSON_PATH = os.path.join("raw", "climate_id.txt.03")  #json directory path
 CACHE_FILE = os.path.join("raw", "graph.pickle")
 
 
