@@ -13,4 +13,6 @@
     <ProjectReference Include="..\Twitter\Twitter.csproj" />
   </ItemGroup>
 
+  <Import Project="..\Helpers\Helpers.projitems" Label="Shared" />
+
 </Project>

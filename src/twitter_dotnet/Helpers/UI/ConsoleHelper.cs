@@ -1,8 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
-using TwitterHydrator.Enums;
 
-namespace TwitterHydrator.Core
+namespace Helpers.UI
 {
     /// <summary>
     /// A small <see langword="class"/> with some helper methods to print info to the user

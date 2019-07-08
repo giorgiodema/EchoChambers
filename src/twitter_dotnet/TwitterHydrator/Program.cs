@@ -2,11 +2,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
+using Helpers.UI;
 using JetBrains.Annotations;
 using Twitter;
 using Twitter.Models.OAuth;
 using TwitterHydrator.Core;
-using TwitterHydrator.Enums;
 using TwitterHydrator.Options;
 
 namespace TwitterHydrator
