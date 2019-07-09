@@ -1,4 +1,6 @@
 import math
+import pickle
+from tqdm import tqdm
 from collections import Counter
 
 
@@ -10,13 +12,16 @@ def louvain(G):
 def launcher(G):
     nodes_original = [n for n in G.keys()]
     communities,sum_in,sum_tot,k,kin = INIT(G)
+    n_iter = 0 # DEBUG
 
     while True:
+        n_iter += 1 # DEBUG
         communities,cont = PHASE1(G,communities,sum_in,sum_tot,k,kin)
         if not cont:
             break
         G,communities = PHASE2(G, communities)
         sum_in,sum_tot,k,kin = INIT_PHASE1(G,communities)
+        print(f"# {n_iter}") # DEBUG
     
     return communities,nodes_original
 
@@ -72,7 +77,11 @@ def PHASE1(G,communities,sum_in,sum_tot,k,kin):
         updated = False
         for_counter += 1
 
-        for i in G:
+        # stats
+        nnodes = len(G.keys())
+        updates_per_iter = 0
+
+        for i in tqdm(G):
             max_delta_Q = -1
             max_community = None
 
@@ -95,6 +104,7 @@ def PHASE1(G,communities,sum_in,sum_tot,k,kin):
                     max_community = communities[j]
 
             if max_delta_Q > 0 and max_community!=communities[i]:
+                updates_per_iter+=1
                 old_community = communities[i]
                 communities[i] = max_community
                 updated = True
@@ -123,6 +133,9 @@ def PHASE1(G,communities,sum_in,sum_tot,k,kin):
                     kin[j][old_community] -= weight
                     kin[j][max_community] += weight
 
+        # stats
+        print(f"updates_per_iter:    {updates_per_iter}")
+        print(f"update ratio    :    {(updates_per_iter/n_nodes)*100}%")
 
     if for_counter > 1:
         return communities,True
@@ -189,3 +202,19 @@ G2 = {
 communities = louvain(G2)
 print("ciao")
 """
+
+if __name__ == '__main__':
+    with open("raw\\graph-compressed_weighted_set.pickle", "rb") as f:
+        G = pickle.load(f)
+
+    n_nodes = len(G.keys())
+    communities = louvain(G)
+    n_communities = len(set(communities.values()))
+
+    print(f"nodes: {n_nodes}")
+    print(f"communities: {n_communities}")
+
+    with open("raw\\communities.pickle", "wb") as f:
+        pickle.dump(communities, f)
+
+
