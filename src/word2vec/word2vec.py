@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorboard.plugins import projector
 from data_preprocessing import load_dictionary, load_dataset, generate_batches
 from helpers import find_closest
+from weights_serialization import save_array, save_vector
 
 # constants
 
@@ -13,7 +14,7 @@ WINDOW_SIZE = 2             # how many words to consider left and right
 SAMPLE_SIZE = WINDOW_SIZE * 2 + 1   # Number of tokens in each sample
 NEG_SAMPLES = 64            # number of negative examples to sample
 TRAIN_ITERATIONS = 100000   # number of training epochs
-TEST_INTERVAL = 10000       # interval between each training test pass
+TEST_INTERVAL = 1000        # interval between each training test pass
 NUM_TRUE = WINDOW_SIZE * 2  # expected words for every input word
 INTEREST_WORDS = [
     'climate', 'warming',
@@ -128,9 +129,14 @@ with tf.Session(graph=graph) as session:
             for word in INTEREST_WORDS:
                 index = direct_map[word]
                 print('    • {}: '.format(word), end='')
-                for j in find_closest(index, embeddings, 5):
+                for j in find_closest(index, embeddings, 8):
                     print(inverse_map[j], end=' ')
                 print('')
+
+            # save the weights
+            save_array(embeddings, os.path.join(TMP_DIR, DATASET_ID + '_word-embeddings.ls'))
+            save_array(session.run(context_embeddings), os.path.join(TMP_DIR, DATASET_ID + '_context-embeddings.ls'))
+            save_vector(session.run(output_biases), os.path.join(TMP_DIR, DATASET_ID + '_biases.ls'))
 
     # save the model checkpoint
     saver.save(session, os.path.join(TMP_DIR, 'model.ckpt'))
