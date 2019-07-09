@@ -4,9 +4,9 @@ from math import log
 import os
 import pickle
 from tqdm import tqdm
-from collections import defaultdict
+from collections import defaultdict, Counter
 
-GRAPH_FILE = os.path.join("raw", "graph-compressed.pickle")
+GRAPH_FILE = os.path.join("raw", "graph.pickle")
 
 with open(GRAPH_FILE, "rb") as f:
     G = pickle.load(f)
@@ -77,13 +77,13 @@ def compress_graph():
         pickle.dump(graph, f)
 
 
-def compress_graph_weighted_set():
+def compress_graph_weighted_dict():
     graph = {}
     for node in tqdm(list(G.nodes)):
-        if not node in graph:
-            graph[node] = set()
+        node_dict = Counter()
         for neighbor in G.neighbors(node):
-            graph[node].add((neighbor, G[node][neighbor]["weight"]))
+            node_dict[neighbor] = G[node][neighbor]["weight"]
+        graph[node] = node_dict
         G.remove_node(node)
 
     with open(os.path.join("raw", "graph-compressed_weighted_set.pickle"), "wb") as f:
@@ -104,5 +104,4 @@ def compress_graph_weighted_list():
 
 
 if __name__ == '__main__':
-    #compress_graph_weighted_list()
-    pass
+    compress_graph_weighted_dict()
