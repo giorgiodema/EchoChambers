@@ -3,6 +3,7 @@ import pickle
 from tqdm import tqdm
 from collections import Counter
 
+DELTA_THRESHOLD = 0.01
 
 def louvain(G):
     communities,nodes_original = launcher(G)
@@ -63,7 +64,7 @@ def INIT_PHASE1(G,communities):
     return sum_in,sum_tot,k,kin
 
 
-def PHASE1(G,communities,sum_in,sum_tot,k,kin):
+def PHASE1(G,communities,sum_in,sum_tot,k,kin,):
     updated = True
     for_counter = 0
 
@@ -73,6 +74,8 @@ def PHASE1(G,communities,sum_in,sum_tot,k,kin):
             if v < w:
                 m+=G[v][w]
 
+    prev_ratio = 1
+
     while updated:
         updated = False
         for_counter += 1
@@ -81,11 +84,11 @@ def PHASE1(G,communities,sum_in,sum_tot,k,kin):
         nnodes = len(G.keys())
         updates_per_iter = 0
 
-        for i in tqdm(G):
+        for i, i_neighbors in tqdm(G.items()):
             max_delta_Q = -1
             max_community = None
 
-            for j in G[i]:
+            for j in i_neighbors:
                 C = communities[j]
                 #if C != communities[i]:
                 # Compute change in modularity by moving node i into
@@ -109,7 +112,7 @@ def PHASE1(G,communities,sum_in,sum_tot,k,kin):
                 communities[i] = max_community
                 updated = True
 
-                for j in G[i]:
+                for j in i_neighbors:
                     weight = G[i][j]
 
                     # update sum_in
@@ -134,10 +137,19 @@ def PHASE1(G,communities,sum_in,sum_tot,k,kin):
                     kin[j][max_community] += weight
 
         # stats
+        ratio = updates_per_iter/n_nodes
         print(f"updates_per_iter:    {updates_per_iter}")
-        print(f"update ratio    :    {(updates_per_iter/n_nodes)*100}%")
+        print(f"update ratio    :    {ratio*100}%")
 
-    if for_counter > 1:
+        # to speedup convergency
+        if prev_ratio - ratio < DELTA_THRESHOLD:
+            break
+        prev_ratio = ratio
+
+        
+
+
+    if for_counter > 2:
         return communities,True
     else:
         return communities,False
