@@ -11,8 +11,8 @@ def load_dictionary(path):
     '''
 
     # load the words vector
-    with open(path, 'r') as file:
-        words = [int(line.split(' ')[1]) if len(line) > 0 for line in file]
+    with open(path, 'r') as ls:
+        words = [int(line.split(' ')[1]) if len(line) > 0 for line in ls]
 
     # build the direct and inverse mappings
     direct_map, inverse_map = dict(), dict()
@@ -21,3 +21,24 @@ def load_dictionary(path):
         inverse_map[i] = word
 
     return words, direct_map, inverse_map
+
+def load_dataset(path, min_size):
+    '''Loads a dataset of sentences
+
+    Parameters:
+    path: the path of the dataset file to load
+    min_size: the minimum number of words in loaded sentences
+
+    Returns:
+    dataset: a vector of sentences (vectors of indices)
+    '''
+
+    dataset = []
+    with open(path, 'r') as ls:
+        for line in ls:
+            if (len(line) == 0) continue
+            tokens = line.split(' ')
+            if (len(tokens) < min_size) continue
+            dataset += [[int(token) for token in tokens]]
+
+    return dataset
