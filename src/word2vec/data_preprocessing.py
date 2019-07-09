@@ -40,7 +40,7 @@ def load_dataset(path, min_size):
     with open(path, 'r', encoding='utf-8') as ls:
         for line in ls:
             if len(line) <= 1: continue
-            tokens = line.split(' ').rstrip()
+            tokens = line.rstrip().split(' ')
             if len(tokens) < min_size: continue
             dataset += [[int(token) for token in tokens]]
 
