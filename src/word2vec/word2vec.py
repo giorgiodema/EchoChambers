@@ -6,13 +6,13 @@ from data_preprocessing import load_dictionary, load_dataset, generate_batches
 
 # constants
 
-BATCH_SIZE = 64             # Number of samples per batch
+BATCH_SIZE = 128            # Number of samples per batch
 EMBEDDING_SIZE = 200        # Dimension of the embedding vector
 WINDOW_SIZE = 2             # How many words to consider left and right
 SAMPLE_SIZE = WINDOW_SIZE * 2 + 1   # Number of tokens in each sample
 NEG_SAMPLES = 64            # Number of negative examples to sample
 TRAIN_ITERATIONS = 100000   # Number of training epochs
-TEST_INTERVAL = 500         # Interval between each training test pass
+TEST_INTERVAL = 1000        # Interval between each training test pass
 NUM_TRUE = WINDOW_SIZE * 2  # expected words for every input word
 
 DATASET_DIR = r'C:\Users\Sergi\Documents\WIR\dataset'
@@ -70,16 +70,30 @@ with graph.as_default():
     saver = tf.train.Saver() # network saver
 print('>> graph created')
 
+# write the metadata for the word embeddings
+with open(TMP_DIR + 'metadata.tsv', 'w', encoding='utf-8') as f:
+    for i in range(DICTIONARY_SIZE):
+        f.write(inverse_map[i] + '\n')
+
 # training
 with tf.Session(graph=graph) as session:
 
     # initialization
-    writer = tf.summary.FileWriter(TMP_DIR, session.graph)
+    writer = tf.summary.FileWriter(TMP_DIR, graph)
     init.run() # initialize the variables in the graph
     batches = generate_batches(dataset, WINDOW_SIZE, BATCH_SIZE)
     print('>> session initialized')
 
+    # create the configuration to visualize the embeddings with labels in TensorBoard
+    config = projector.ProjectorConfig()
+    embedding_conf = config.embeddings.add()
+    embedding_conf.tensor_name = word_embeddings.name
+    embedding_conf.metadata_path = os.path.join(TMP_DIR, 'metadata.tsv')
+    projector.visualize_embeddings(writer, config)
+    print('>> added embeddings projector configuration')
+
     # training loop
+    print('============ START ============')
     average_loss = 0
     for i in range(TRAIN_ITERATIONS):
 
@@ -102,20 +116,8 @@ with tf.Session(graph=graph) as session:
         if i > 0 and i % TEST_INTERVAL == 0:
             print('>> [{}]: loss = {}'.format(i, average_loss / TEST_INTERVAL))
             average_loss = 0
-    
-    # write the metadata for the word embeddings
-    with open(os.path.join(os.path.dirname(__file__), TMP_DIR) + 'metadata.tsv', 'w') as f:
-        for i in range(DICTIONARY_SIZE):
-            f.write(inverse_map[i] + '\n')
-    
+
     # save the model checkpoint
     saver.save(session, os.path.join(TMP_DIR, 'model.ckpt'))
-
-    # create the configuration to visualize the embeddings with labels in TensorBoard
-    config = projector.ProjectorConfig()
-    embedding_conf = config.embeddings.add()
-    embedding_conf.tensor_name = word_embeddings.name
-    embedding_conf.metadata_path = os.path.join(TMP_DIR, 'metadata.tsv')
-    projector.visualize_embeddings(writer, config)
 
 writer.close()
