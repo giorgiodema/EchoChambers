@@ -57,6 +57,14 @@ namespace Word2VecPreprocessor.Core
                 foreach (var tweets in texts.Values)
                     foreach (var tweet in tweets)
                         output.WriteLine(string.Join(' ', tweet.Select(token => lookup.TryGetValue(token, out int i) ? i : 0)));
+
+            // Save the datasets of the specific communities
+            ConsoleHelper.Write(MessageType.Info, "Saving community datasets...");
+            foreach (var community in LoadCommunities(options.CommunitiesFile).Select((c, i) => (Users: c, Id: i)))
+                using (var output = File.CreateText(Path.Join(options.DestinationFolder, $"{guid}_dataset_{community.Id}.ls")))
+                    foreach (var tweets in community.Users.Select(id => texts[id]))
+                        foreach (var tweet in tweets)
+                            output.WriteLine(string.Join(' ', tweet.Select(token => lookup.TryGetValue(token, out int i) ? i : 0)));
         }
 
         /// <summary>
@@ -83,6 +91,19 @@ namespace Word2VecPreprocessor.Core
             foreach (var folder in Directory.EnumerateDirectories(path))
                 foreach (var tweet in EnumerateTweets(folder))
                     yield return tweet;
+        }
+
+        /// <summary>
+        /// Loads the list of user ids for the available communities
+        /// </summary>
+        /// <param name="path">The path of the CSV file with the list of user ids</param>
+        [NotNull, ItemNotNull]
+        [Pure]
+        private static IEnumerable<IReadOnlyList<ulong>> LoadCommunities([NotNull] string path)
+        {
+            using (var reader = File.OpenText(path))
+                while (reader.ReadLine() is string line)
+                    yield return line.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(ulong.Parse).ToArray();
         }
     }
 }
