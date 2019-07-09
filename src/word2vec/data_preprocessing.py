@@ -11,8 +11,11 @@ def load_dictionary(path):
     '''
 
     # load the words vector
-    with open(path, 'r') as ls:
-        words = [int(line.split(' ')[1]) for line in ls if len(line) > 0]
+    words = []
+    with open(path, 'r', encoding='utf-8') as ls:
+        for line in ls:
+            if len(line) <= 1: continue
+            words += [line.rstrip().split(' ')[1]]
 
     # build the direct and inverse mappings
     direct_map, inverse_map = dict(), dict()
@@ -34,11 +37,11 @@ def load_dataset(path, min_size):
     '''
 
     dataset = []
-    with open(path, 'r') as ls:
+    with open(path, 'r', encoding='utf-8') as ls:
         for line in ls:
-            if (len(line) == 0) continue
-            tokens = line.split(' ')
-            if (len(tokens) < min_size) continue
+            if len(line) <= 1: continue
+            tokens = line.split(' ').rstrip()
+            if len(tokens) < min_size: continue
             dataset += [[int(token) for token in tokens]]
 
     return dataset
