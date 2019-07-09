@@ -29,7 +29,8 @@ dataset = load_dataset(DATASET_PATH, SAMPLE_SIZE)
 print('>> {} loaded sentences'.format(len(dataset)))
 
 # model definition
-with tf.Graph().as_default():
+graph = tf.Graph()
+with graph.as_default():
 
     # input tensors
     with tf.name_scope('inputs'):
@@ -70,7 +71,7 @@ with tf.Graph().as_default():
 print('>> graph created')
 
 # training
-with tf.Session() as session:
+with tf.Session(graph=graph) as session:
 
     # initialization
     writer = tf.summary.FileWriter(TMP_DIR, session.graph)
