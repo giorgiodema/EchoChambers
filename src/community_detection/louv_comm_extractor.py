@@ -70,5 +70,9 @@ if not os.path.exists(COMMUNITIES_PATH):
     extract_communities(G)
 
 communities = load_communities()
-draw_communities(G,communities)
+len = list(map(lambda x:len(x),communities))
+len.sort()
+len.reverse()
+
+#draw_communities(G,communities)
 
