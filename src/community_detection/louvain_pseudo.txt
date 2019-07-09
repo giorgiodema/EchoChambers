@@ -1,0 +1,71 @@
+
+
+# communiti init
+communities = {}
+for v in G:
+	communities[v] = v
+
+
+
+PHASE 1(G, communities):
+
+updated = True
+for_counter = 0
+
+while updated:
+	updated = False
+	for_counter += 1
+
+	for v in G:
+		max_delta_Q = -1
+		max_community = None
+
+		for edge in v:
+			w = edge[0]
+
+			temp = communities[v]
+			communities[v] = communities[w]
+			delta_Q = ...
+			if delta_Q > max_delta_Q:
+				max_delta_Q = delta_Q
+				max_community = communities[w]
+
+			communities[v] = temp
+
+		if max_delta_Q > 0:
+			communities[v] = max_communities
+			updated = True
+
+	for_counter += 1
+
+if for_counter > 1:
+	return communities
+else:
+	return None
+
+
+
+
+
+#communities[v] --> la community di v
+
+
+
+
+PHASE 2(G, communities):
+
+G_com = {}
+
+for c in set(communities.values()):
+	G_com[c] = set()
+
+for v in G:
+	cv = communities[v]
+	for edge in v:
+		w = edge[0]
+		cw = communities[w]
+		
+		if cv != cw:
+			G_com[cv][cw] += 1
+
+return G_com, communities
