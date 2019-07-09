@@ -12,7 +12,7 @@ def load_dictionary(path):
 
     # load the words vector
     with open(path, 'r') as ls:
-        words = [int(line.split(' ')[1]) if len(line) > 0 for line in ls]
+        words = [int(line.split(' ')[1]) for line in ls if len(line) > 0]
 
     # build the direct and inverse mappings
     direct_map, inverse_map = dict(), dict()
