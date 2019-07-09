@@ -13,11 +13,12 @@ WINDOW_SIZE = 2             # how many words to consider left and right
 SAMPLE_SIZE = WINDOW_SIZE * 2 + 1   # Number of tokens in each sample
 NEG_SAMPLES = 64            # number of negative examples to sample
 TRAIN_ITERATIONS = 100000   # number of training epochs
-TEST_INTERVAL = 1000        # interval between each training test pass
+TEST_INTERVAL = 10000       # interval between each training test pass
 NUM_TRUE = WINDOW_SIZE * 2  # expected words for every input word
 INTEREST_WORDS = [
     'climate', 'warming',
-    'believe', 'science'
+    'believe', 'science',
+    'health', 'denial', 'hoax'
 ]                           # the words to display at each internal
 
 DATASET_DIR = r'C:\Users\Sergi\Documents\WIR\dataset'

@@ -29,7 +29,8 @@ namespace Word2VecPreprocessor.Core
         private static readonly IReadOnlyList<string> SkippedWords = new[]
         {
             "with", "that", "from", "which", "were", "this",
-            "also", "have", "they", "them", "those", "these"
+            "also", "have", "they", "them", "those", "these",
+            "what", "make", "made", "those"
         };
 
         /// <summary>
