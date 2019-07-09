@@ -1,5 +1,7 @@
-from os import path
+import math
+import os
 import tensorflow as tf
+from tensorboard.plugins import projector
 from data_preprocessing import load_dictionary, load_dataset, generate_batches
 
 # constants
@@ -15,8 +17,8 @@ NUM_TRUE = WINDOW_SIZE * 2  # expected words for every input word
 
 DATASET_DIR = r'C:\Users\Sergi\Documents\WIR\dataset'
 DATASET_ID = 'ebfe2853a23742d8b6c3f7443f3b4884'
-DICTIONARY_PATH = path.join(DATASET_DIR, DATASET_ID + '_words.ls')
-DATASET_PATH = path.join(DATASET_DIR, DATASET_ID + '_dataset.ls')
+DICTIONARY_PATH = os.path.join(DATASET_DIR, DATASET_ID + '_words.ls')
+DATASET_PATH = os.path.join(DATASET_DIR, DATASET_ID + '_dataset.ls')
 TMP_DIR = "/tmp/"
 
 # dataset loading
@@ -99,3 +101,20 @@ with tf.Session() as session:
         if i > 0 and i % TEST_INTERVAL == 0:
             print('>> [{}]: loss = {}'.format(i, average_loss / TEST_INTERVAL))
             average_loss = 0
+    
+    # write the metadata for the word embeddings
+    with open(os.path.join(os.path.dirname(__file__), TMP_DIR) + 'metadata.tsv', 'w') as f:
+        for i in range(DICTIONARY_SIZE):
+            f.write(inverse_map[i] + '\n')
+    
+    # save the model checkpoint
+    saver.save(session, os.path.join(TMP_DIR, 'model.ckpt'))
+
+    # create the configuration to visualize the embeddings with labels in TensorBoard
+    config = projector.ProjectorConfig()
+    embedding_conf = config.embeddings.add()
+    embedding_conf.tensor_name = word_embeddings.name
+    embedding_conf.metadata_path = os.path.join(TMP_DIR, 'metadata.tsv')
+    projector.visualize_embeddings(writer, config)
+
+writer.close()
