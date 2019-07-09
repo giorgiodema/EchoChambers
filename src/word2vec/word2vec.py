@@ -20,6 +20,6 @@ TMP_DIR = "/tmp/"
 
 # dataset loading
 dictionary, direct_map, inverse_map = load_dictionary(DICTIONARY_PATH)
-print('{} loaded words'.format(len(dictionary)))
+print('>> {} loaded words'.format(len(dictionary)))
 dataset = load_dataset(DATASET_PATH, SAMPLE_SIZE)
-print('{} loaded sentences'.format(len(dataset)))
+print('>> {} loaded sentences'.format(len(dataset)))
