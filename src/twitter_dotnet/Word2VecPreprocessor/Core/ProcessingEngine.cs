@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Helpers.UI;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
@@ -76,10 +77,13 @@ namespace Word2VecPreprocessor.Core
         private static IEnumerable<Tweet> EnumerateTweets([NotNull] string path)
         {
             // Load the tweets in the current directory
-            foreach (var file in Directory.EnumerateFiles(path))
+            foreach (var tweets in Directory.EnumerateFiles(path).AsParallel().Select(file =>
             {
                 var json = File.ReadAllText(file);
-                var tweets = JsonConvert.DeserializeObject<IList<Tweet>>(json);
+                return JsonConvert.DeserializeObject<IList<Tweet>>(json);
+            }))
+            {
+                // For each tweet, return the tweet and the original status, if present
                 foreach (var tweet in tweets)
                 {
                     yield return tweet;
