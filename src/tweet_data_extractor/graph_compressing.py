@@ -6,12 +6,14 @@ import pickle
 from tqdm import tqdm
 from collections import defaultdict
 
-GRAPH_FILE = os.path.join("raw", "graph-compressed.pickle")
+GRAPH_FILE = os.path.join("raw", "graph-compressed_weighted_set.pickle")
 
 with open(GRAPH_FILE, "rb") as f:
     G = pickle.load(f)
 
-
+for node in G:
+    print(G[node])
+exit()
 
 def prune_nodes():
     """Discards nodes that have less than [1,5] edges"""
