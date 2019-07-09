@@ -3,17 +3,22 @@ import os
 import tensorflow as tf
 from tensorboard.plugins import projector
 from data_preprocessing import load_dictionary, load_dataset, generate_batches
+from helpers import find_closest
 
 # constants
 
-BATCH_SIZE = 128            # Number of samples per batch
-EMBEDDING_SIZE = 200        # Dimension of the embedding vector
-WINDOW_SIZE = 2             # How many words to consider left and right
+BATCH_SIZE = 128            # number of samples per batch
+EMBEDDING_SIZE = 200        # dimension of the embedding vector
+WINDOW_SIZE = 2             # how many words to consider left and right
 SAMPLE_SIZE = WINDOW_SIZE * 2 + 1   # Number of tokens in each sample
-NEG_SAMPLES = 64            # Number of negative examples to sample
-TRAIN_ITERATIONS = 100000   # Number of training epochs
-TEST_INTERVAL = 1000        # Interval between each training test pass
+NEG_SAMPLES = 64            # number of negative examples to sample
+TRAIN_ITERATIONS = 100000   # number of training epochs
+TEST_INTERVAL = 1000        # interval between each training test pass
 NUM_TRUE = WINDOW_SIZE * 2  # expected words for every input word
+INTEREST_WORDS = [
+    'climate', 'warming',
+    'believe', 'science'
+]                           # the words to display at each internal
 
 DATASET_DIR = r'C:\Users\Sergi\Documents\WIR\dataset'
 DATASET_ID = 'ebfe2853a23742d8b6c3f7443f3b4884'
@@ -116,6 +121,15 @@ with tf.Session(graph=graph) as session:
         if i > 0 and i % TEST_INTERVAL == 0:
             print('>> [{}]: loss = {}'.format(i, average_loss / TEST_INTERVAL))
             average_loss = 0
+
+            # display the closest words
+            embeddings = session.run(word_embeddings)
+            for word in INTEREST_WORDS:
+                index = direct_map[word]
+                print('    • {}: '.format(word), end='')
+                for j in find_closest(index, embeddings, 5):
+                    print(inverse_map[j], end=' ')
+                print('')
 
     # save the model checkpoint
     saver.save(session, os.path.join(TMP_DIR, 'model.ckpt'))

@@ -11,7 +11,7 @@ def save_array(matrix, path):
             for j in range(len(row)):
                 print(row[j], file=txt, end=' ')
 
-def save_array(path):
+def load_array(path):
     '''Loads a matrix from the specified file
 
     Parameters:
