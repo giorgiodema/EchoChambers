@@ -63,21 +63,22 @@ def generate_batches(dataset, window_size, batch_size):
     sample_tokens = window_size * 2 + 1
     while True:
         for tweet in dataset:
-            for i in range(sample_tokens - 5):
-                samples += [tweet[window_size]] # center token
+            for i in range(len(tweet) - sample_tokens + 1):
+                samples += [tweet[window_size + i]] # center token
                 targets = []
                 for j in range(i, sample_tokens + i):
                     if j != i + window_size:
                         targets += [tweet[j]]
                 labels += [targets]
-            
-            k += 1
-            if k == batch_size:
 
-                # debug
-                assert len(samples) == batch_size, 'The samples size doesn\'t match the batch size'
-                assert len(labels) == batch_size, 'The labels size doesn\'t match the batch size'
+                # return a batch when enough samples are collected
+                k += 1
+                if k == batch_size:
 
-                yield samples, labels
-                samples, labels = [], []
-                k = 0
+                    # debug
+                    assert len(samples) == batch_size, 'The samples size doesn\'t match the batch size'
+                    assert len(labels) == batch_size, 'The labels size doesn\'t match the batch size'
+
+                    yield samples, labels
+                    samples, labels = [], []
+                    k = 0
