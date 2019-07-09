@@ -35,7 +35,7 @@ with tf.Graph().as_default():
         train_labels = tf.placeholder(tf.int32, shape=[BATCH_SIZE, NUM_TRUE]) # outputs for every input word
 
     # variable tensors
-    with tf_name_scope('variables'):
+    with tf.name_scope('variables'):
         word_embeddings = tf.Variable(tf.random_uniform([DICTIONARY_SIZE, EMBEDDING_SIZE], -1.0, 1.0), name='word_embeddings')
         context_embeddings = tf.Variable(tf.truncated_normal([DICTIONARY_SIZE, EMBEDDING_SIZE], stddev=1.0 / math.sqrt(EMBEDDING_SIZE)), name='context_embeddings') # swapped shapes for sampled softmax
         output_biases = tf.Variable(tf.zeros([DICTIONARY_SIZE])) # needed by the sampled softmax
