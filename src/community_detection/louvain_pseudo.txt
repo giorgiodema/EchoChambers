@@ -5,6 +5,7 @@ communities = {}
 for v in G:
 	communities[v] = v
 
+nodes_original = [n for n in G.keys()]
 
 
 PHASE 1(G, communities):
@@ -59,7 +60,7 @@ G_com = {}
 for c in set(communities.values()):
 	G_com[c] = set()
 
-for v in G:
+for v in list(G):
 	cv = communities[v]
 	for edge in v:
 		w = edge[0]
@@ -67,5 +68,6 @@ for v in G:
 		
 		if cv != cw:
 			G_com[cv][cw] += 1
+	del G[v]
 
 return G_com, communities
