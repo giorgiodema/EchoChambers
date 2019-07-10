@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorboard.plugins import projector
 from data_preprocessing import load_dictionary, load_dataset, generate_batches
 from helpers import find_closest
-from weights_serialization import save_array, save_vector
+from weights_serialization import save_array, save_vector, load_array, load_vector
 
 # constants
 
@@ -13,8 +13,8 @@ EMBEDDING_SIZE = 200        # dimension of the embedding vector
 WINDOW_SIZE = 2             # how many words to consider left and right
 SAMPLE_SIZE = WINDOW_SIZE * 2 + 1   # Number of tokens in each sample
 NEG_SAMPLES = 64            # number of negative examples to sample
-TRAIN_ITERATIONS = 100000   # number of training epochs
-TEST_INTERVAL = 1000        # interval between each training test pass
+TRAIN_ITERATIONS = 10000000 # number of training epochs
+TEST_INTERVAL = 10000       # interval between each training test pass
 NUM_TRUE = WINDOW_SIZE * 2  # expected words for every input word
 INTEREST_WORDS = [
     'climate', 'warming',
@@ -22,11 +22,18 @@ INTEREST_WORDS = [
     'health', 'denial', 'hoax'
 ]                           # the words to display at each internal
 
-DATASET_DIR = r'C:\Users\Sergi\Documents\WIR\dataset'
-DATASET_ID = 'ebfe2853a23742d8b6c3f7443f3b4884'
+DATASET_DIR = r'C:\Users\Sergio\Documents\WIR\dataset'
+DATASET_ID = '978d3bfaa50a4e028d4c740ba39578df'
 DICTIONARY_PATH = os.path.join(DATASET_DIR, DATASET_ID + '_words.ls')
-DATASET_PATH = os.path.join(DATASET_DIR, DATASET_ID + '_dataset.ls')
-TMP_DIR = "/tmp/"
+DATASET_PATH = os.path.join(DATASET_DIR, DATASET_ID + '_dataset_1.ls')
+TMP_DIR = r'C:\Users\Sergio\Documents\WIR\tmp'
+
+# when resuming training
+WEIGHTS_BASE_PATH = r'C:\Users\Sergio\Documents\WIR\tmp\tweets_all_978d3bfaa50a4e028d4c740ba39578df\978d3bfaa50a4e028d4c740ba39578df'
+WEIGHTS_PRESENT = WEIGHTS_BASE_PATH != None
+WORD_EMBEDDINGS_PATH = WEIGHTS_BASE_PATH + '_word-embeddings.ls'
+CONTEXT_EMBEDDINGS_PATH = WEIGHTS_BASE_PATH + '_context-embeddings.ls'
+BIASES_PATH = WEIGHTS_BASE_PATH + '_biases.ls'
 
 # dataset loading
 dictionary, direct_map, inverse_map = load_dictionary(DICTIONARY_PATH)
@@ -46,9 +53,14 @@ with graph.as_default():
 
     # variable tensors
     with tf.name_scope('variables'):
-        word_embeddings = tf.Variable(tf.random_uniform([DICTIONARY_SIZE, EMBEDDING_SIZE], -1.0, 1.0), name='word_embeddings')
-        context_embeddings = tf.Variable(tf.truncated_normal([DICTIONARY_SIZE, EMBEDDING_SIZE], stddev=1.0 / math.sqrt(EMBEDDING_SIZE)), name='context_embeddings') # swapped shapes for sampled softmax
-        output_biases = tf.Variable(tf.zeros([DICTIONARY_SIZE])) # needed by the sampled softmax
+        if not WEIGHTS_PRESENT:
+            word_embeddings = tf.Variable(tf.random_uniform([DICTIONARY_SIZE, EMBEDDING_SIZE], -1.0, 1.0), name='word_embeddings')
+            context_embeddings = tf.Variable(tf.truncated_normal([DICTIONARY_SIZE, EMBEDDING_SIZE], stddev=1.0 / math.sqrt(EMBEDDING_SIZE)), name='context_embeddings') # swapped shapes for sampled softmax
+            output_biases = tf.Variable(tf.zeros([DICTIONARY_SIZE])) # needed by the sampled softmax
+        else:
+            word_embeddings = tf.Variable(load_array(WORD_EMBEDDINGS_PATH, DICTIONARY_SIZE, EMBEDDING_SIZE), dtype=tf.float32, name='word_embeddings')
+            context_embeddings = tf.Variable(load_array(CONTEXT_EMBEDDINGS_PATH, DICTIONARY_SIZE, EMBEDDING_SIZE), dtype=tf.float32, name='context_embeddings')
+            output_biases = tf.Variable(load_vector(BIASES_PATH), dtype=tf.float32)
     lookup = tf.nn.embedding_lookup(word_embeddings, train_inputs) # forward inputs to the hidden layer
 
     # loss
@@ -78,7 +90,7 @@ with graph.as_default():
 print('>> graph created')
 
 # write the metadata for the word embeddings
-with open(TMP_DIR + 'metadata.tsv', 'w', encoding='utf-8') as f:
+with open(os.path.join(TMP_DIR, 'metadata.tsv'), 'w', encoding='utf-8') as f:
     for i in range(DICTIONARY_SIZE):
         f.write(inverse_map[i] + '\n')
 
@@ -138,7 +150,7 @@ with tf.Session(graph=graph) as session:
             save_array(session.run(context_embeddings), os.path.join(TMP_DIR, DATASET_ID + '_context-embeddings.ls'))
             save_vector(session.run(output_biases), os.path.join(TMP_DIR, DATASET_ID + '_biases.ls'))
 
-    # save the model checkpoint
-    saver.save(session, os.path.join(TMP_DIR, 'model.ckpt'))
+            # save the model checkpoint
+            saver.save(session, os.path.join(TMP_DIR, 'model.ckpt'))
 
 writer.close()
