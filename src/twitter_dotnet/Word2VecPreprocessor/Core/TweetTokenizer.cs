@@ -30,7 +30,8 @@ namespace Word2VecPreprocessor.Core
         {
             "with", "that", "from", "which", "were", "this",
             "also", "have", "they", "them", "those", "these",
-            "what", "make", "made", "those", "there", "their"
+            "what", "make", "made", "those", "there", "their",
+            "doesn", "when"
         };
 
         /// <summary>
@@ -42,10 +43,16 @@ namespace Word2VecPreprocessor.Core
         public static IReadOnlyList<string> Parse([NotNull] string text)
         {
             var filtered = UrlRegex.Replace(text, string.Empty);
-            var tweaked = filtered.Replace("climatechange", "climate change");
+            var tweaked = filtered.ToLowerInvariant()
+                .Replace("climatechange", "climate change")
+                .Replace("climateaction", "climate action")
+                .Replace("globalwarming", "global warming")
+                .Replace("actonclimate", "act on climate")
+                .Replace("climatechan", "climate chan")
+                .Replace("climatechangeisreal", "climate change is real");
             return (
                 from match in TokensRegex.Matches(tweaked)
-                let token = match.Value.ToLowerInvariant()
+                let token = match.Value
                 where token.Length >= 4 && !SkippedWords.Contains(token)
                 select token).ToArray();
         }
