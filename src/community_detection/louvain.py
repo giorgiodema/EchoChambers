@@ -212,7 +212,6 @@ G2 = {
 }
 
 communities = louvain(G2)
-print("ciao")
 """
 
 if __name__ == '__main__':
