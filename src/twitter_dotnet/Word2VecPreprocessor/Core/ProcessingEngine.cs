@@ -60,7 +60,7 @@ namespace Word2VecPreprocessor.Core
 
             // Save the datasets of the specific communities
             ConsoleHelper.Write(MessageType.Info, "Saving community datasets...");
-            foreach (var community in LoadCommunities(options.CommunitiesFile).Select((c, i) => (Users: c, Id: i)))
+            foreach (var community in LoadCommunities(options.CommunitiesFile).Take(options.CommunitiesLimit).Select((c, i) => (Users: c, Id: i)))
                 using (var output = File.CreateText(Path.Join(options.DestinationFolder, $"{guid}_dataset_{community.Id}.ls")))
                     foreach (var tweets in community.Users.Select(id => texts[id]))
                         foreach (var tweet in tweets)

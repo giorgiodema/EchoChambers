@@ -23,6 +23,12 @@ namespace Word2VecPreprocessor.Options
         public string CommunitiesFile { get; set; }
 
         /// <summary>
+        /// Gets or sets the maximum number of communities to load
+        /// </summary>
+        [Option('l', "communitiesLimit", HelpText = "The maximum number of communities to load.", Required = true)]
+        public int CommunitiesLimit { get; set; }
+
+        /// <summary>
         /// Gets or sets the destination folder to use to store the results
         /// </summary>
         [Option('d', "destination", HelpText = "The destination folder to use to store the results.", Required = true)]
@@ -53,6 +59,7 @@ namespace Word2VecPreprocessor.Options
             if (!Directory.Exists(DestinationFolder)) throw new ArgumentException("The destination directory doesn't exist");
 
             // Other parameters
+            if (CommunitiesLimit <= 0) throw new ArgumentException("The communities limit must be a positive number");
             if (Words <= 0) throw new ArgumentException("The number of words must be a positive number");
         }
     }
