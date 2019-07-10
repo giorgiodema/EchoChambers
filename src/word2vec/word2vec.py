@@ -3,7 +3,7 @@ import os
 import tensorflow as tf
 from tensorboard.plugins import projector
 from data_preprocessing import load_dictionary, load_dataset, generate_batches
-from helpers import find_closest
+from data_analysis import find_closest
 from weights_serialization import save_array, save_vector, load_array, load_vector
 
 # constants
