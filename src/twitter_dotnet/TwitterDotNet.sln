@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29025.244
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwitterHydrator", "TwitterHydrator\TwitterHydrator.csproj", "{0A48F312-F667-42D9-9771-D5622A83EA3B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Twitter", "Twitter\Twitter.csproj", "{ED4CC4BB-C70C-4C7B-8D5B-4C9C7644BD71}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Word2VecPreprocessor", "Word2VecPreprocessor\Word2VecPreprocessor.csproj", "{2C675E89-0EB2-4844-8F8B-7AC9179C86FF}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Helpers", "Helpers\Helpers.shproj", "{F1268C1C-23C9-42FD-AE5C-2A6C229BE613}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Helpers\Helpers.projitems*{f1268c1c-23c9-42fd-ae5c-2a6c229be613}*SharedItemsImports = 13
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0A48F312-F667-42D9-9771-D5622A83EA3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A48F312-F667-42D9-9771-D5622A83EA3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A48F312-F667-42D9-9771-D5622A83EA3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A48F312-F667-42D9-9771-D5622A83EA3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED4CC4BB-C70C-4C7B-8D5B-4C9C7644BD71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED4CC4BB-C70C-4C7B-8D5B-4C9C7644BD71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED4CC4BB-C70C-4C7B-8D5B-4C9C7644BD71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED4CC4BB-C70C-4C7B-8D5B-4C9C7644BD71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C675E89-0EB2-4844-8F8B-7AC9179C86FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C675E89-0EB2-4844-8F8B-7AC9179C86FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C675E89-0EB2-4844-8F8B-7AC9179C86FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C675E89-0EB2-4844-8F8B-7AC9179C86FF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5C98DA4A-6593-45C4-83B3-FEA0AB576884}
+	EndGlobalSection
+EndGlobal
