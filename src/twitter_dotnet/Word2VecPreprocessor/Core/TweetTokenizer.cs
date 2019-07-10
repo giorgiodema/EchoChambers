@@ -42,8 +42,9 @@ namespace Word2VecPreprocessor.Core
         public static IReadOnlyList<string> Parse([NotNull] string text)
         {
             var filtered = UrlRegex.Replace(text, string.Empty);
+            var tweaked = filtered.Replace("climatechange", "climate change");
             return (
-                from match in TokensRegex.Matches(filtered)
+                from match in TokensRegex.Matches(tweaked)
                 let token = match.Value.ToLowerInvariant()
                 where token.Length >= 4 && !SkippedWords.Contains(token)
                 select token).ToArray();
