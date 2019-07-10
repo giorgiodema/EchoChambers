@@ -1,3 +1,5 @@
+import numpy as np
+
 def save_array(matrix, path):
     '''Saves a matrix as a text file in the specified path
 
@@ -11,19 +13,18 @@ def save_array(matrix, path):
             for j in range(len(row)):
                 print(row[j], file=txt, end=' ')
 
-def load_array(path):
+def load_array(path, h, w):
     '''Loads a matrix from the specified file
 
     Parameters:
     path: the path of the file with the matrix to load
+    h: the height of the array to load
+    w: the width of the array to load
     '''
 
     with open(path, 'r', encoding='utf-8') as txt:
-        matrix = []
-        for line in txt:
-            row = [float(n) for n in line.strip().split(' ')]
-            matrix += [row]
-        return matrix
+        values = [float(n) for n in txt.readline().strip().split(' ')]
+        return np.array(values, dtype=float).reshape([h, w])
 
 def save_vector(vector, path):
     '''Saves a vector as a text file in the specified path
@@ -45,8 +46,8 @@ def load_vector(path):
     '''
 
     with open(path, 'r', encoding='utf-8') as txt:
-        return [
+        return np.array([
             float(line.strip())
             for line in txt
             if len(line) > 1
-        ]
+        ], dtype=float)
