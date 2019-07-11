@@ -1,9 +1,22 @@
 import math
 import pickle
+import signal
 from tqdm import tqdm
 from collections import Counter
 
-DELTA_THRESHOLD = 0.01
+
+
+CONTINUE = True
+
+def signal_handler(sig, frame):
+    global CONTINUE
+    print('Finishing iteration and stopping phase 1...')
+    CONTINUE = False
+
+signal.signal(signal.SIGINT, signal_handler)
+
+
+
 
 def louvain(G):
     communities,nodes_original = launcher(G)
@@ -76,7 +89,18 @@ def PHASE1(G,communities,nodes_merged_into,sum_in,sum_tot,k,kin,):
             if v < w:
                 m+=G[v][w]
 
-    while updated:
+    # Ask to continue if sigint was catched
+    global CONTINUE
+    if not CONTINUE:
+        cont = ""
+        while cont != "Y" and cont != "N":
+            cont = input("Continue execution? ")
+        if cont == "N":
+            return communities,nodes_merged_into,False
+
+    CONTINUE = True
+
+    while updated and CONTINUE:
         updated = False
         for_counter += 1
 
