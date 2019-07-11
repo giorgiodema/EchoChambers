@@ -133,8 +133,8 @@ def PHASE1(G,communities,nodes_merged_into,sum_in,sum_tot,k,kin,):
                 updates_per_iter+=1
                 old_community = communities[i]
                 communities[i] = max_community
-                for node in nodes_merged_into[i]:
-                    communities[node] = max_community
+                for node in nodes_merged_into[i]:       #TODO: Da togliere se non avemo toppato
+                    communities[node] = max_community   #TODO: Da togliere se non avemo toppato 
                 updated = True
 
                 for j in i_neighbors:
@@ -195,7 +195,9 @@ def PHASE2(G, communities, nodes_merged_into):
 
             # for every node already merged update its community
             for merged_node in merged_nodes:
-                communities[merged_node] = community
+                if communities[merged_node] != community:
+                    print("avemo toppato")
+                #communities[merged_node] = community    #TODO: Da decommentare se non avemo toppato
             
             nodes_merged_into[community].extend(merged_nodes)
             del nodes_merged_into[merging_node]
