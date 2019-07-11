@@ -14,6 +14,19 @@ def tweets_iter(dir_path):
                 for tweet in tweets:
                     yield tweet
 
+def tweets_directories_iter(dir_path, dirs_prefix):
+    """Iterator on all subfolders whose name starts with 'dirs_prefix' inside directory 'dir_path'. Does not recurse"""
+    for dirname in os.listdir(dir_path):
+        dirpath = os.path.join(dir_path, dirname)
+        if os.path.isdir(dirpath) and dirname.startswith(dirs_prefix):
+            print(f"Exploring {dirname}")
+            all_tweets = tweets_iter(dirpath)
+            for t in all_tweets:
+                yield t
+        else:
+            print(f"Skipping {dirname}")
+
+
 
 def extract_domain(link: str) -> str:
 	"""Extract the domain of an url"""
