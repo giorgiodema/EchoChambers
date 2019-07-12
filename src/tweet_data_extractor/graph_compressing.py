@@ -6,7 +6,8 @@ import pickle
 from tqdm import tqdm
 from collections import defaultdict, Counter
 
-GRAPH_FILE = os.path.join("raw", "graph-compressed_weighted_set.pickle")
+GRAPH_NAME = "graph-compressed_weighted_set.pickle"
+GRAPH_FILE = os.path.join("raw", GRAPH_NAME)
 
 with open(GRAPH_FILE, "rb") as f:
     G = pickle.load(f)
@@ -83,12 +84,19 @@ def compress_graph_weighted_dict():
     graph = {}
     for node in tqdm(list(G.nodes)):
         node_dict = Counter()
+        can_remove = True
         for neighbor in G.neighbors(node):
             node_dict[neighbor] = G[node][neighbor]["weight"]
+            if not neighbor in graph:
+                can_remove = False 
         graph[node] = node_dict
-        G.remove_node(node)
+        if can_remove:
+            G.remove_node(node)
 
-    with open(os.path.join("raw", "graph-compressed_weighted_set.pickle"), "wb") as f:
+    if not os.path.isdir(os.path.join("raw", "compressed")):
+        os.mkdir(os.path.join("raw", "compressed"))
+
+    with open(os.path.join("raw", "compressed", GRAPH_NAME+".compressed"), "wb") as f:
         pickle.dump(graph, f)
 
 
