@@ -28,12 +28,8 @@ def compress_graph(G, Gname):
 
 
 
-def merge_compressed_graphs(G1, G2, G1name, G2name):
-    G1 = G
-    with open(os.path.join("raw", "graph-compressed_weighted_set_1.pickle"), "rb") as f:
-        G2 = pickle.load(f)
-
-    for n in set(G1.keys()).union(set(G2.keys())):
+def merge_compressed_graphs(G1, G2, Gcompname):
+    for n in tqdm(set(G1.keys()).union(set(G2.keys()))):
         if (n in G1) and (n in G2):
             G1[n] = G1[n] + G2[n]
         elif (not n in G1) and (n in G2):
@@ -41,26 +37,44 @@ def merge_compressed_graphs(G1, G2, G1name, G2name):
         if n in G2:
             del G2[n]
     
-    with open(os.path.join("raw", "graph-compressed_weighted_set_merged.pickle"), "wb") as f:
+    with open(os.path.join("raw", f"{Gcompname}"), "wb") as f:
         pickle.dump(G1, f)
 
 
 
 if __name__ == '__main__':
-    Gname = "graph-compressed_weighted_set.pickle"
-    Gpath = os.path.join("raw", Gname)
+    graphs = {"graph_01.pickle","graph_03.pickle","graph_00_fragment_1.pickle","graph_00_fragment_2.pickle","graph_00_fragment_3.pickle","graph_00_fragment_4.pickle"}
 
-    COMPRESS = True
-
-    if COMPRESS:
-        with open(Gpath, "rb") as f:
+    for fname in graphs:
+        with open(os.path.join("raw", fname), "rb") as f:
             G = pickle.load(f)
+        compress_graph(G, fname)
+        del G
 
-        compress_graph(G, Gname)
-    
-    else:
-        G2name = "graph-compressed_weighted_set.pickle"
-        G2path = os.path.join("raw", G2name)
-        with open(G2path, "rb") as f:
+    Gcompressed = list(map(lambda x: x+".compressed", graphs))
+
+    for i in range(0,6,2):
+        fname1 = Gcompressed[i]
+        fname2 = Gcompressed[i+1]
+        with open(os.path.join("raw", "compressed", fname1), "rb") as f:
+            G1 = pickle.load(f)
+        with open(os.path.join("raw", "compressed", fname2), "rb") as f:
             G2 = pickle.load(f)
-        merge_compressed_graphs(G, G2, Gpath, G2path)
+        merge_compressed_graphs(G1, G2, str(i))
+        del G1, G2
+
+    
+    with open(os.path.join("raw",str(0)), "rb") as f:
+        G1 = pickle.load(f)
+    with open(os.path.join("raw",str(2)), "rb") as f:
+        G2 = pickle.load(f)
+    merge_compressed_graphs(G1, G2, "02")
+    del G1, G2
+
+
+    with open(os.path.join("raw","02"), "rb") as f:
+        G1 = pickle.load(f)
+    with open(os.path.join("raw",str(4)), "rb") as f:
+        G2 = pickle.load(f)
+    merge_compressed_graphs(G1, G2, "merged_final")
+    del G1, G2
