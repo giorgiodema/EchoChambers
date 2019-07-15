@@ -1,5 +1,5 @@
 
-from tweet_parser_utils import tweets_iter
+from tweet_parser_utils import tweets_iter, tweets_directories_iter
 from collections import Counter, defaultdict
 import pickle
 import os
@@ -31,7 +31,7 @@ communities_list.sort(key=lambda x: x[1], reverse=True)
 
 
 
-all_tweets = tweets_iter(TWEETS_DIR)
+all_tweets = tweets_directories_iter("raw", "climate_id.")
 
 tweets_by_com = {}  # tweets_by_com[community] ---> list of tweets of that community
 
@@ -46,7 +46,8 @@ for tweet in all_tweets:
 
 
 
-N_LARGEST_COMM = 3
+N_LARGEST_COMM = 15
+print(communities_list[:N_LARGEST_COMM])
 i = 0
 for large_comm, large_comm_size in communities_list[:N_LARGEST_COMM]:
     i += 1

@@ -2,16 +2,16 @@ import math
 import pickle
 import signal
 from tqdm import tqdm
-from collections import Counter
+from collections import Counter, defaultdict
 
 
 
-CONTINUE = True
+SIGINT_catched = False
 
 def signal_handler(sig, frame):
-    global CONTINUE
-    print('Finishing iteration and stopping phase 1...')
-    CONTINUE = False
+    global SIGINT_catched
+    print('\nFinishing iteration and stopping phase 1...')
+    SIGINT_catched = True
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -44,14 +44,13 @@ def launcher(G):
 # communiti init
 def INIT(G):
     communities = {}
-    nodes_merged_into = {}
+    nodes_merged_into = defaultdict(list)
     sum_in = {}               # Sum of weights of edges Inside the community
     sum_tot = Counter()       # Sum of weights of edges incident to nodes in C
     k = {}                    # Sum of weights of edges incident to i
     kin = {}
     for v in G:
         communities[v] = v
-        nodes_merged_into[v] = []
         sum_in[v] = 0
         k[v] = 0
         kin[v] = Counter()
@@ -89,18 +88,9 @@ def PHASE1(G,communities,nodes_merged_into,sum_in,sum_tot,k,kin,):
             if v < w:
                 m+=G[v][w]
 
-    # Ask to continue if sigint was catched
-    global CONTINUE
-    if not CONTINUE:
-        cont = ""
-        while cont != "Y" and cont != "N":
-            cont = input("Continue execution? ")
-        if cont == "N":
-            return communities,nodes_merged_into,False
-
-    CONTINUE = True
-
-    while updated and CONTINUE:
+    global SIGINT_catched
+    SIGINT_catched = False
+    while updated and not SIGINT_catched:
         updated = False
         for_counter += 1
 
@@ -133,8 +123,6 @@ def PHASE1(G,communities,nodes_merged_into,sum_in,sum_tot,k,kin,):
                 updates_per_iter+=1
                 old_community = communities[i]
                 communities[i] = max_community
-                for node in nodes_merged_into[i]:
-                    communities[node] = max_community
                 updated = True
 
                 for j in i_neighbors:
@@ -166,9 +154,20 @@ def PHASE1(G,communities,nodes_merged_into,sum_in,sum_tot,k,kin,):
         print(f"updates_per_iter:    {updates_per_iter}")
         print(f"update ratio    :    {ratio*100}%")
 
+
         
+    # Ask to continue if SIGINT was catched
+    if SIGINT_catched:
+        cont = ""
+        while cont != "Y" and cont != "N":
+            cont = input("Continue execution? (Y/N) ")
+        if cont == "Y":
+            return communities,nodes_merged_into,True
+        else:
+            return communities,nodes_merged_into,False   
+ 
 
-
+    # If performed more than one for-loop iteration continue with phase2, otherwise stop the algorithm
     if for_counter > 1:
         return communities,nodes_merged_into,True
     else:
@@ -181,11 +180,13 @@ def PHASE1(G,communities,nodes_merged_into,sum_in,sum_tot,k,kin,):
 
 
 def PHASE2(G, communities, nodes_merged_into):
+    print(" [*] Starting PHASE2")
 
     G_com = {}
 
     # Update communities of merged nodes
-    for node in G:
+    print("Update communities of merged nodes")
+    for node in tqdm(G):
         community = communities[node]
         #if 'node' and its community aren't the same, then the node is merged into a different node
         #I've to update all the nodes merged into 'node' to the new community
@@ -207,13 +208,16 @@ def PHASE2(G, communities, nodes_merged_into):
         G_com[c] = Counter()
 
     # Set community graph edges
-    for v in list(G):
+    print("Setting community graph edges")
+    for v in tqdm(list(G)):
         cv = communities[v]
         for w in G[v]:
             cw = communities[w]
             
             if cv != cw:
                 G_com[cv][cw] += 1
+                G_com[cw][cv] += 1
+
         del G[v]
 
     return G_com, communities, nodes_merged_into
@@ -253,7 +257,7 @@ G2 = {
 }
 
 
-TESTING = True
+TESTING = False
 
 if __name__ == '__main__':
     if TESTING:
@@ -261,14 +265,20 @@ if __name__ == '__main__':
         communities = louvain(G1)
         exit()
 
-    with open("raw\\graph-compressed_weighted_set.pickle", "rb") as f:
+    with open("raw\\merged_final", "rb") as f:
         G = pickle.load(f)
 
     n_nodes = len(G.keys())
+    print(f"nodes: {n_nodes}")
+    n_edges = 0
+    for n, neigh in G.items():
+        n_edges += len(neigh)
+    print(f"edges: {n_edges}")
+    
     communities = louvain(G)
     n_communities = len(set(communities.values()))
 
-    print(f"nodes: {n_nodes}")
+
     print(f"communities: {n_communities}")
 
     with open("raw\\communities.pickle", "wb") as f:

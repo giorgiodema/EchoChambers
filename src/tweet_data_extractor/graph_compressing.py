@@ -6,104 +6,30 @@ import pickle
 from tqdm import tqdm
 from collections import defaultdict, Counter
 
-GRAPH_FILE = os.path.join("raw", "graph-compressed_weighted_set.pickle")
 
-with open(GRAPH_FILE, "rb") as f:
-    G = pickle.load(f)
-
-for node in G:
-    print(G[node])
-exit()
-
-def prune_nodes():
-    """Discards nodes that have less than [1,5] edges"""
-    for node in tqdm(list(G.nodes)):
-        if len(G[node]) <= 1:
-            G.remove_node(node)
-
-    print(f"Saving 1-pruned graph nodes {len(G.nodes)}, edges {len(G.edges)}")
-    with open(os.path.join("raw", "graph-1-pruned.pickle"), "wb") as f:
-        pickle.dump(G, f)
-
-
-    for node in tqdm(list(G.nodes)):
-        if len(G[node]) <= 2:
-            G.remove_node(node)
-
-    print(f"Saving 2-pruned graph nodes {len(G.nodes)}, edges {len(G.edges)}")
-    with open(os.path.join("raw", "graph-2-pruned.pickle"), "wb") as f:
-        pickle.dump(G, f)
-
-
-    for node in tqdm(list(G.nodes)):
-        if len(G[node]) <= 3:
-            G.remove_node(node)
-
-    print(f"Saving 3-pruned graph nodes {len(G.nodes)}, edges {len(G.edges)}")
-    with open(os.path.join("raw", "graph-3-pruned.pickle"), "wb") as f:
-        pickle.dump(G, f)
-
-
-    for node in tqdm(list(G.nodes)):
-        if len(G[node]) <= 4:
-            G.remove_node(node)
-
-    print(f"Saving 4-pruned graph nodes {len(G.nodes)}, edges {len(G.edges)}")
-    with open(os.path.join("raw", "graph-4-pruned.pickle"), "wb") as f:
-        pickle.dump(G, f)
-
-
-    for node in tqdm(list(G.nodes)):
-        if len(G[node]) <= 5:
-            G.remove_node(node)
-
-    print(f"Saving 5-pruned graph nodes {len(G.nodes)}, edges {len(G.edges)}")
-    with open(os.path.join("raw", "graph-5-pruned.pickle"), "wb") as f:
-        pickle.dump(G, f)
-
-
-
-
-
-def compress_graph():
-    graph = {}
-    for node in tqdm(list(G.nodes)):
-        if not node in graph:
-            graph[node] = set()
-        for neighbor in G.neighbors(node):
-            graph[node].add(neighbor)
-        G.remove_node(node)
-
-    print(f"Saving compressed nodes {len(G.nodes)}, edges {len(G.edges)}")
-    with open(os.path.join("raw", "graph-compressed.pickle"), "wb") as f:
-        pickle.dump(graph, f)
-
-
-def compress_graph_weighted_dict():
+def compress_graph(G, Gname):
     graph = {}
     for node in tqdm(list(G.nodes)):
         node_dict = Counter()
+        can_remove = True
         for neighbor in G.neighbors(node):
             node_dict[neighbor] = G[node][neighbor]["weight"]
+            if not neighbor in graph:
+                can_remove = False 
         graph[node] = node_dict
-        G.remove_node(node)
+        if can_remove:
+            G.remove_node(node)
 
-    with open(os.path.join("raw", "graph-compressed_weighted_set.pickle"), "wb") as f:
+    if not os.path.isdir(os.path.join("raw", "compressed")):
+        os.mkdir(os.path.join("raw", "compressed"))
+
+    with open(os.path.join("raw", "compressed", Gname+".compressed"), "wb") as f:
         pickle.dump(graph, f)
 
 
 
-def merge_graphs_weighted_dict():
-    G1 = G
-    with open(os.path.join("raw", "graph-compressed_weighted_set_1.pickle"), "rb") as f:
-        G2 = pickle.load(f)
-    '''G2 = {           #test code
-        2: Counter({3:1, 5:1}),
-        3:Counter({2:1, 5:1}),
-        5:Counter({2:1, 3:1})
-    }'''
-
-    for n in set(G1.keys()).union(set(G2.keys())):
+def merge_compressed_graphs(G1, G2, Gcompname):
+    for n in tqdm(set(G1.keys()).union(set(G2.keys()))):
         if (n in G1) and (n in G2):
             G1[n] = G1[n] + G2[n]
         elif (not n in G1) and (n in G2):
@@ -111,23 +37,74 @@ def merge_graphs_weighted_dict():
         if n in G2:
             del G2[n]
     
-    with open(os.path.join("raw", "graph-compressed_weighted_set_merged.pickle"), "wb") as f:
+    with open(os.path.join("raw", f"{Gcompname}"), "wb") as f:
         pickle.dump(G1, f)
 
+    
+def get_user_id_mappings(G):
+    G_new = {}
+    id_counter = 0
+    map_user_id = {}
+    map_id_user = {}
+    for user in list(G):
+        id_counter += 1
+        map_user_id[user] = id_counter
+        map_id_user[id_counter] = user
+        G_new[id_counter] = Counter(G[user])
+        del G[user]
 
-def compress_graph_weighted_list():
-    graph = {}
-    for node in tqdm(list(G.nodes)):
-        if not node in graph:
-            graph[node] = []
-        for neighbor in G.neighbors(node):
-            graph[node].append([neighbor, G[node][neighbor]["weight"]])
-        G.remove_node(node)
+    with open(os.path.join("raw", "map_user_id"), "wb") as f:
+        pickle.dump(map_user_id, f)
+    with open(os.path.join("raw", "map_id_user"), "wb") as f:
+        pickle.dump(map_id_user, f)
+    with open(os.path.join("raw", "merged_final_with_id"), "wb") as f:
+        pickle.dump(G_new, f)
 
-    with open(os.path.join("raw", "graph-compressed_weighted_list.pickle"), "wb") as f:
-        pickle.dump(graph, f)
+    
+
+    
+
 
 
 if __name__ == '__main__':
-    compress_graph_weighted_dict()
-    #merge_graphs_weighted_dict()
+    '''
+    graphs = {"graph_01.pickle","graph_03.pickle","graph_00_fragment_1.pickle","graph_00_fragment_2.pickle","graph_00_fragment_3.pickle","graph_00_fragment_4.pickle"}
+
+    for fname in graphs:
+        with open(os.path.join("raw", fname), "rb") as f:
+            G = pickle.load(f)
+        compress_graph(G, fname)
+        del G
+
+    Gcompressed = list(map(lambda x: x+".compressed", graphs))
+
+    for i in range(0,6,2):
+        fname1 = Gcompressed[i]
+        fname2 = Gcompressed[i+1]
+        with open(os.path.join("raw", "compressed", fname1), "rb") as f:
+            G1 = pickle.load(f)
+        with open(os.path.join("raw", "compressed", fname2), "rb") as f:
+            G2 = pickle.load(f)
+        merge_compressed_graphs(G1, G2, str(i))
+        del G1, G2
+
+    
+    with open(os.path.join("raw",str(0)), "rb") as f:
+        G1 = pickle.load(f)
+    with open(os.path.join("raw",str(2)), "rb") as f:
+        G2 = pickle.load(f)
+    merge_compressed_graphs(G1, G2, "02")
+    del G1, G2
+
+
+    with open(os.path.join("raw","02"), "rb") as f:
+        G1 = pickle.load(f)
+    with open(os.path.join("raw",str(4)), "rb") as f:
+        G2 = pickle.load(f)
+    merge_compressed_graphs(G1, G2, "merged_final")
+    del G1, G2
+    '''
+
+    with open(os.path.join("raw", "merged_final"), "rb") as f:
+        G = pickle.load(f)
+    get_user_id_mappings(G)
