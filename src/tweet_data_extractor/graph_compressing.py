@@ -40,9 +40,34 @@ def merge_compressed_graphs(G1, G2, Gcompname):
     with open(os.path.join("raw", f"{Gcompname}"), "wb") as f:
         pickle.dump(G1, f)
 
+    
+def get_user_id_mappings(G):
+    G_new = {}
+    id_counter = 0
+    map_user_id = {}
+    map_id_user = {}
+    for user in list(G):
+        id_counter += 1
+        map_user_id[user] = id_counter
+        map_id_user[id_counter] = user
+        G_new[id_counter] = Counter(G[user])
+        del G[user]
+
+    with open(os.path.join("raw", "map_user_id"), "wb") as f:
+        pickle.dump(map_user_id, f)
+    with open(os.path.join("raw", "map_id_user"), "wb") as f:
+        pickle.dump(map_id_user, f)
+    with open(os.path.join("raw", "merged_final_with_id"), "wb") as f:
+        pickle.dump(G_new, f)
+
+    
+
+    
+
 
 
 if __name__ == '__main__':
+    '''
     graphs = {"graph_01.pickle","graph_03.pickle","graph_00_fragment_1.pickle","graph_00_fragment_2.pickle","graph_00_fragment_3.pickle","graph_00_fragment_4.pickle"}
 
     for fname in graphs:
@@ -78,3 +103,8 @@ if __name__ == '__main__':
         G2 = pickle.load(f)
     merge_compressed_graphs(G1, G2, "merged_final")
     del G1, G2
+    '''
+
+    with open(os.path.join("raw", "merged_final"), "rb") as f:
+        G = pickle.load(f)
+    get_user_id_mappings(G)
