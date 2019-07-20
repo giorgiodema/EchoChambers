@@ -5,7 +5,8 @@ from tqdm import tqdm
 from collections import Counter, defaultdict
 
 
-
+# Register CTRL+C to stop during phase 1 if it does not converge and 
+# continue with phase 2
 SIGINT_catched = False
 
 def signal_handler(sig, frame):
@@ -19,38 +20,54 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 def louvain(G):
-    communities,nodes_original = launcher(G)
-    return communities
+    """
+    Given a graph G, finds the optimal community for each node following the Louvain method
 
+    Parameters
+    ----------
+    G : graph
+        Must be an undirected weighted graph in the form of a dictionary in the form of G[v]-->Counter structure
+        which has as key the neighbors (u1,u2,..) of v, and as value the weight of the edge (integer)
+        between v and the neighbor. Example: G[v][u] = weight of the edge between v,u. Note that it 
+        must be enforced G[v][u] == G[u][v]. In addition, by using a Counter structure, if the edge
+        between u,v does not exist, then G[u][v] == 0. Also a defaultdict(int) can do the job
 
-def launcher(G):
-    nodes_original = [n for n in G.keys()]
-    communities,nodes_merged_into,sum_in,sum_tot,k,kin = INIT(G)
-    n_iter = 0 # DEBUG
+    Returns
+    -------
+    communities : dict
+        Dictionary mapping each node to a community. Example: communities[v] --> community of node v
+    """
+
+    communities,nodes_merged_into,sum_in,sum_tot,k,kin = INIT_PHASE1(G, first_init=True)
+    n_iter = 0   #counter for phase1-phase2 iterations
 
     while True:
-        n_iter += 1 # DEBUG
-        communities,nodes_merged_into,cont = PHASE1(G,communities,nodes_merged_into,sum_in,sum_tot,k,kin)
+        n_iter += 1
+        communities,cont = PHASE1(G,communities,sum_in,sum_tot,k,kin)
         if not cont:
             break
         G,communities,nodes_merged_into = PHASE2(G, communities, nodes_merged_into)
-        sum_in,sum_tot,k,kin = INIT_PHASE1(G,communities)
-        print(f"# {n_iter}") # DEBUG
+        sum_in,sum_tot,k,kin = INIT_PHASE1(G)
+        print(f"# {n_iter}")
     
-    return communities,nodes_original
+    return communities
 
         
 
-# communiti init
-def INIT(G):
-    communities = {}
-    nodes_merged_into = defaultdict(list)
+
+
+
+def INIT_PHASE1(G, first_init=False):
+    if first_init:
+        communities = {}
+        nodes_merged_into = defaultdict(list)
     sum_in = {}               # Sum of weights of edges Inside the community
     sum_tot = Counter()       # Sum of weights of edges incident to nodes in C
     k = {}                    # Sum of weights of edges incident to i
     kin = {}
     for v in G:
-        communities[v] = v
+        if first_init:
+            communities[v] = v
         sum_in[v] = 0
         k[v] = 0
         kin[v] = Counter()
@@ -59,26 +76,14 @@ def INIT(G):
             sum_tot[v]+= G[v][w]
             kin[v][w] = G[v][w]
 
-    return communities,nodes_merged_into,sum_in,sum_tot,k,kin
-
-def INIT_PHASE1(G,communities):
-    sum_in = {}             # Sum of weights of edges Inside the community
-    sum_tot = Counter()     # Sum of weights of edges incident to nodes in C
-    k = {}                  # Sum of weights of edges incident to i
-    kin = {}
-    for v in G:
-        sum_in[v] = 0
-        k[v] = 0
-        kin[v] = Counter()
-        for w in G[v]:
-            k[v]+= G[v][w]
-            sum_tot[v]+= G[v][w]
-            kin[v][w] = G[v][w]
-
-    return sum_in,sum_tot,k,kin
+    if first_init:
+        return communities,nodes_merged_into,sum_in,sum_tot,k,kin
+    return sum_in,sum_tot,k,kin 
 
 
-def PHASE1(G,communities,nodes_merged_into,sum_in,sum_tot,k,kin,):
+
+
+def PHASE1(G,communities,sum_in,sum_tot,k,kin,):
     updated = True
     for_counter = 0
 
@@ -160,18 +165,18 @@ def PHASE1(G,communities,nodes_merged_into,sum_in,sum_tot,k,kin,):
     if SIGINT_catched:
         cont = ""
         while cont != "Y" and cont != "N":
-            cont = input("Continue execution? (Y/N) ")
+            cont = input("Phase 1 stopped, continue execution with phase 2? (Y/N) ")
         if cont == "Y":
-            return communities,nodes_merged_into,True
+            return communities,True
         else:
-            return communities,nodes_merged_into,False   
+            return communities,False   
  
 
     # If performed more than one for-loop iteration continue with phase2, otherwise stop the algorithm
     if for_counter > 1:
-        return communities,nodes_merged_into,True
+        return communities,True
     else:
-        return communities,nodes_merged_into,False
+        return communities,False
 
 
 
@@ -224,6 +229,13 @@ def PHASE2(G, communities, nodes_merged_into):
 
 
 
+
+
+
+
+#   -   -   -    TEST CODE    -    -    -
+
+
 #test code
 G1 = {
     1: Counter({2:10, 3:10, 4:10, 5:1}),
@@ -265,7 +277,7 @@ if __name__ == '__main__':
         communities = louvain(G1)
         exit()
 
-    with open("raw\\merged_final", "rb") as f:
+    with open("raw\\graph-compressed_weighted_dict_1.pickle", "rb") as f:
         G = pickle.load(f)
 
     n_nodes = len(G.keys())
