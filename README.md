@@ -1,5 +1,6 @@
 # Mapping the echo-chambers on Twitter network
 
+Community identification and word polarization.
 
 _Slides_ available [here](https://docs.google.com/presentation/d/e/2PACX-1vRAW6A-_3HRHTB_rQj2nJ02R7WfD-ppgti8wvY0gZQP5xpYYvJ_HgBbTd5gXyLWN4IsJJkOfNsUh4ET/pub?start=false&loop=false&delayms=10000&slide=id.p)
 
@@ -10,7 +11,12 @@ These communities are often oblivious to, or openly hostile towards, alternative
 
 
 ## Our Work
-What we wanted to do is to programmatically find those communities and then check whether or not they result to be polarized on a specific view for the "climate change" topic, that we have selected. We have performed the following steps: 
+What we wanted to do is:
+ 1. Programmatically find users' communities 
+ 2. Check whether or not they result to be polarized on a specific view for the "climate change" selected topic
+ 3. Apply [__Word2Vec__](https://it.wikipedia.org/wiki/Word2vec) to detect "deviated" words, which are words that are used in different context when switching from a community to the other. Some of them are reported in the second-last slide
+ 
+## Steps
 
  - __Download dataset__ [here](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/5QCCUU) of tweets related to climate change topic
 
@@ -18,9 +24,9 @@ What we wanted to do is to programmatically find those communities and then chec
 
  - __Programmatically find graph communities__ through [Louvain's method](https://en.wikipedia.org/wiki/Louvain_modularity)
 
- - __Check their polarization__ by looking at the tweets by users partecipating in the communities. For comparison, some tweets are reported in the second-last slide
+ - __Check communities polarization__ by looking at the tweets by users partecipating in the communities. For comparison, some tweets are reported in the second-last slide
 
-We have also applied [__Word2Vec__](https://it.wikipedia.org/wiki/Word2vec) to detect "deviated" words, or words that are used in different context when switching from a community to the other. Some of them are reported in the last slide
+ - __Check word polarization between communities__ using Word2Vec
 
 ## References
 This project was partially inspired by the paper "Mapping the echo-chamber: detecting and characterizing partisan networks on Twitter", by Armineh Nourbakhsh, Xiaomo Liu, Quanzhi Li, Sameema Shah.
